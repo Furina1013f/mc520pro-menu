@@ -1,0 +1,38 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# 开发自检产物
+run/
+logs/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本机专用（不要提交）
+.gradle-home/
+local-repo/
+tools/jdk21-x/
+tools/gradle-x/
+tools/img_parts/
+tools/*.zip
+tools/*.html
+tools/proxy.err
+tools/proxy.log
+build-log*.txt
+assets-d*.log
+runclient.log
+*.log

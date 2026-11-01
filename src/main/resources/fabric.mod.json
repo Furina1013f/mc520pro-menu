@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "mc520pro",
+	"version": "${version}",
+	"name": "520Pro 服务器菜单",
+	"description": "mc.520pro.top 服务器专属内置菜单：仅在连接专属服务器时解锁全部功能。含分类指令目录、二级参数向导、在线玩家列表、权限与头衔自动探测。",
+	"authors": [
+		"Furina"
+	],
+	"contact": {
+		"homepage": "https://github.com/Furina1013f/mc520pro-menu",
+		"sources": "https://github.com/Furina1013f/mc520pro-menu",
+		"issues": "https://github.com/Furina1013f/mc520pro-menu/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/mc520pro/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"top.mc520pro.menu.MC520ProMenuClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.9",
+		"minecraft": "=1.21.8",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

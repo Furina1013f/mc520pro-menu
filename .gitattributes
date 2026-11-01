@@ -1,0 +1,31 @@
+# macOS / Windows
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+
+# Gradle
+.gradle/
+build/
+out/
+
+# 开发自检产物
+run/
+logs/
+
+# 本机专用
+.gradle-home/
+local-repo/
+tools/jdk21-x/
+tools/gradle-x/
+tools/img_parts/
+*.log
