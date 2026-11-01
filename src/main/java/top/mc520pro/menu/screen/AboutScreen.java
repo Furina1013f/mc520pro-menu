@@ -7,6 +7,7 @@ import net.minecraft.text.Text;
 import top.mc520pro.menu.ModInfo;
 import top.mc520pro.menu.PermissionDetector;
 import top.mc520pro.menu.ServerDetector;
+import top.mc520pro.menu.UpdateChecker;
 
 /**
  * 关于页（v10）：作者、版本（读自 fabric.mod.json）、连接状态与头衔、
@@ -35,7 +36,7 @@ public class AboutScreen extends Screen {
 		float open = easeOut(this.openT);
 
 		int pw = Math.max(250, Math.min(420, this.width - 40));
-		int ph = Math.min(this.height - 24, 268);
+		int ph = Math.min(this.height - 24, 300);
 		int px = (this.width - pw) / 2;
 		int py = (this.height - ph) / 2;
 
@@ -54,6 +55,30 @@ public class AboutScreen extends Screen {
 				Text.literal("v" + ModInfo.version()), px + 26, py + 19, withAlpha(0xFFDCD2FF, open));
 
 		int y = py + 40;
+		// 更新状态（自动检测 GitHub Releases）
+		UpdateChecker.checkAsync();
+		UpdateChecker.Result upd = UpdateChecker.get();
+		context.drawTextWithShadow(this.textRenderer, Text.literal("更新"), px + 16, y,
+				withAlpha(0xFF8C86A8, open));
+		String updText;
+		int updColor = 0xFF9C93C4;
+		if (upd != null && upd.latestVersion() == null) {
+			updText = "无法连接更新源";
+			updColor = 0xFFFF8F9A;
+		} else if (upd != null && upd.hasUpdate()) {
+			updText = "v" + upd.latestVersion() + " 可用（当前 v" + upd.currentVersion() + "）";
+			updColor = 0xFFFFD766;
+		} else if (upd != null && upd.latestVersion() != null) {
+			updText = "已是最新 v" + upd.currentVersion();
+			updColor = 0xFF9CFFC9;
+		} else {
+			updText = "检查中…";
+			updColor = 0xFF9C93C4;
+		}
+		context.drawTextWithShadow(this.textRenderer, Text.literal(updText), px + 56, y,
+				withAlpha(updColor, open));
+		y += 16;
+
 		// 作者
 		context.drawTextWithShadow(this.textRenderer, Text.literal("作者"), px + 16, y,
 				withAlpha(0xFF8C86A8, open));
@@ -138,7 +163,7 @@ public class AboutScreen extends Screen {
 			return super.mouseClicked(mouseX, mouseY, button);
 		}
 		int pw = Math.max(250, Math.min(420, this.width - 40));
-		int ph = Math.min(this.height - 24, 268);
+		int ph = Math.min(this.height - 24, 300);
 		int px = (this.width - pw) / 2;
 		int py = (this.height - ph) / 2;
 		int btnH = 22;

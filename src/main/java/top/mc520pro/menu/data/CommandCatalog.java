@@ -20,7 +20,7 @@ public final class CommandCatalog {
 	}
 
 	public enum Custom {
-		NONE, OPEN_CMDS, OPEN_ABOUT, OPEN_PLAYERS, COPY_COORDS, COPY_INFO, COPY_DOC, COPY_ELEVATOR
+		NONE, OPEN_CMDS, OPEN_ABOUT, OPEN_PLAYERS, OPEN_UPDATES, COPY_COORDS, COPY_INFO, COPY_DOC, COPY_ELEVATOR
 	}
 
 	public record Entry(String name, String command, String usage, ItemStack icon, Mode mode, Custom custom,
@@ -174,6 +174,7 @@ public final class CommandCatalog {
 
 	// ---------- 全部 ----------
 	public static final Category ALL = new Category("全部", "完整指令树 / 关于本菜单", new ItemStack(Items.BOOK), List.of(
+			Entry.custom("检查更新", "自动检测 GitHub 上是否有新版本，发现后可直接复制下载链接", Items.REDSTONE_TORCH, Custom.OPEN_UPDATES),
 			Entry.custom("打开指令清单", "浏览服务器全部指令（约 168 条），点击复制", Items.BOOKSHELF, Custom.OPEN_CMDS),
 			Entry.custom("关于", "作者 Furina · 版本信息 · 更新日志 · GitHub / 爱发电", Items.NAME_TAG, Custom.OPEN_ABOUT)));
 

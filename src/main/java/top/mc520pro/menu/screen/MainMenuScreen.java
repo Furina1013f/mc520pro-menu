@@ -12,6 +12,7 @@ import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import top.mc520pro.menu.PermissionDetector;
 import top.mc520pro.menu.ServerDetector;
+import top.mc520pro.menu.UpdateChecker;
 import top.mc520pro.menu.data.CommandCatalog;
 
 /**
@@ -295,6 +296,7 @@ public class MainMenuScreen extends Screen {
 					case OPEN_CMDS -> client.setScreen(new CommandsScreen(this));
 					case OPEN_ABOUT -> client.setScreen(new AboutScreen(this));
 					case OPEN_PLAYERS -> client.setScreen(new OnlinePlayersScreen(this));
+					case OPEN_UPDATES -> handleCheckUpdate();
 					case COPY_COORDS -> copyCoords();
 					case COPY_INFO -> copyServerInfo();
 					case COPY_DOC -> {
@@ -332,6 +334,28 @@ public class MainMenuScreen extends Screen {
 	private void copyServerInfo() {
 		MinecraftClient.getInstance().keyboard.setClipboard(ServerDetector.buildServerInfo());
 		showToast("已复制服务器信息");
+	}
+
+	/** 检查更新：有新版 → 复制下载链接；无新版 → 提示已是最新。 */
+	private void handleCheckUpdate() {
+		UpdateChecker.checkAsync();
+		UpdateChecker.Result r = UpdateChecker.get();
+		if (r == null && UpdateChecker.checking()) {
+			showToast("正在检查更新…（首次约需数秒）");
+			return;
+		}
+		if (r == null || r.latestVersion() == null) {
+			showToast("无法连接更新源，请稍后重试");
+			return;
+		}
+		if (r.upToDate()) {
+			showToast("已是最新版本 v" + r.currentVersion());
+			return;
+		}
+		// 有更新：复制 Release 页面链接
+		MinecraftClient client = MinecraftClient.getInstance();
+		client.keyboard.setClipboard(r.releaseUrl());
+		showToast("发现新版 v" + r.latestVersion() + "，已复制下载链接");
 	}
 
 	private void showToast(String text) {
@@ -395,15 +419,39 @@ public class MainMenuScreen extends Screen {
 					this.panelX + 26, this.panelY + 21, withAlpha(0xFFDCD2FF, open));
 		}
 
+		// 更新徽章（有新版本时显示）
+		UpdateChecker.Result upd = UpdateChecker.get();
+		String updateLabel = null;
+		int updateTint = 0xFFFFD766;
+		if (upd != null && upd.hasUpdate()) {
+			updateLabel = "有更新 v" + upd.latestVersion();
+		} else if (upd == null && !UpdateChecker.checking()) {
+			// 尚未检查
+			UpdateChecker.checkAsync();
+		}
+		int updateW = updateLabel == null ? 0 : this.textRenderer.getWidth(updateLabel) + 16;
+
 		// 头衔徽章（自动探测）+ 状态徽章
 		PermissionDetector.Rank rank = PermissionDetector.currentRank();
 		int rankW = this.textRenderer.getWidth(rank.label) + 14;
 		int rankX = this.panelX + this.panelW - 10 - rankW;
+		if (updateW > 0) {
+			rankX -= updateW + 6;
+		}
 		int rankY = this.panelY + (this.compact ? 6 : 9);
 		context.fill(rankX, rankY, rankX + rankW, rankY + 16, withAlpha(0xC0100F1C, open));
 		outline(context, rankX, rankY, rankW, 16, withAlpha(rank.color, open));
 		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(rank.label),
 				rankX + rankW / 2, rankY + 4, withAlpha(rank.color, open));
+
+		if (updateW > 0) {
+			int upX = rankX - 6 - updateW;
+			int upY = rankY;
+			context.fill(upX, upY, upX + updateW, upY + 16, withAlpha(0xE0100F1C, open));
+			outline(context, upX, upY, updateW, 16, withAlpha(updateTint, open));
+			context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(updateLabel),
+					upX + updateW / 2, upY + 4, withAlpha(updateTint, open));
+		}
 
 		String status = this.onServer ? ServerDetector.shortInfo() : "功能已锁定";
 		int badgeH = 16;
