@@ -56,4 +56,18 @@ public final class TextureKit {
 	public static final int TOOLTIP_BG = 51;
 	public static final int PREVIEW_BG = 52;
 	public static final int DIVIDER = 53;
+	// Row 4: 进度条、头像、开关、搜索框
+	public static final int PROGRESS_BAR = 64;
+	public static final int AVATAR_DEFAULT = 65;
+	public static final int AVATAR_PLAYER = 66;
+	public static final int TOGGLE_ON = 67;
+	public static final int TOGGLE_OFF = 68;
+	public static final int SEARCH_BOX = 69;
+	// Row 5: 标签、星星、加载动画、圆点
+	public static final int TAB_NORMAL = 80;
+	public static final int TAB_ACTIVE = 81;
+	public static final int STAR_FULL = 82;
+	public static final int STAR_EMPTY = 83;
+	public static final int LOADING_SPINNER = 84;
+	public static final int BADGE_DOT = 85;
 }

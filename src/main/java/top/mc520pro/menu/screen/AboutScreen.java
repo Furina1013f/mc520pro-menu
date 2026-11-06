@@ -115,9 +115,12 @@ public class AboutScreen extends Screen {
 				break;
 			}
 			if (!line[0].isEmpty()) {
+				// 版本号 + 星星
 				context.drawTextWithShadow(this.textRenderer,
 						Text.literal(line[0]).styled(s -> s.withBold(true)), px + 16, y,
 						GuiKit.withAlpha(GuiKit.C_SUCCESS, open));
+				// 星星图标
+				TextureKit.draw(context, TextureKit.STAR_FULL, px + pw - 20, y, 10, 10);
 				int descX = px + 52;
 				int descW = pw - 28 - 36;
 				context.drawTextWithShadow(this.textRenderer, Text.literal(fit(line[1], descW)),

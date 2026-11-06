@@ -152,16 +152,17 @@ public class OnlinePlayersScreen extends Screen {
 			}
 			boolean hovered = mouseX >= r.x && mouseX < r.x + r.w && mouseY >= y && mouseY < y + ROW_H;
 			boolean self = r.player.self();
-			// 现代行：圆角 + 玻璃 + 左侧强调条
-			int accent = self ? GuiKit.C_GOLD : GuiKit.C_ACCENT2;
-			int bg = hovered ? GuiKit.C_CARD_HOVER : GuiKit.C_CARD;
-			GuiKit.roundedRectA(context, r.x, y, r.w, ROW_H, 6, bg, open * (self ? 0.9f : 0.7f));
-			if (self) {
-				ctx_fill(context, r.x, y + 3, r.x + 3, y + ROW_H - 3, GuiKit.withAlpha(accent, open));
-			}
-			GuiKit.roundedRectStroke(context, r.x, y, r.w, ROW_H, 6, self ? accent : GuiKit.C_BORDER, open);
+			// 现代行：纹理绘制
+			GuiKit.card(context, r.x, y, r.w, ROW_H, self ? GuiKit.C_GOLD : GuiKit.C_ACCENT2,
+					open * (self ? 0.9f : 0.7f), hovered, false, false);
 
-			int textX = r.x + 10;
+			// 头像图标
+			int avatarX = r.x + 6;
+			int avatarY = y + (ROW_H - 20) / 2;
+			TextureKit.draw(context, self ? TextureKit.AVATAR_PLAYER : TextureKit.AVATAR_DEFAULT,
+					avatarX, avatarY, 20, 20);
+
+			int textX = r.x + 30;
 			int pingX = r.x + r.w - BTN_W * 2 - 42;
 			// 名字
 			String nameText = fit(r.player.name(), 90);

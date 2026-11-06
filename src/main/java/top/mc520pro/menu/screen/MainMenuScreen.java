@@ -425,19 +425,20 @@ public class MainMenuScreen extends Screen {
 					this.panelX + 26, this.panelY + 21, GuiKit.withAlpha(0xFFDCD2FF, open));
 		}
 
-		// 更新徽章（有新版本时显示）
+		// 更新状态（进度条 / 徽章）
 		UpdateChecker.Result upd = UpdateChecker.get();
 		String updateLabel = null;
 		int updateTint = GuiKit.C_WARNING;
+		boolean checking = upd == null && UpdateChecker.checking();
 		if (upd != null && upd.hasUpdate()) {
 			updateLabel = "有更新 v" + upd.latestVersion();
-		} else if (upd == null && !UpdateChecker.checking()) {
-			// 尚未检查
+		} else if (upd == null && !checking) {
 			UpdateChecker.checkAsync();
 		}
-		int updateW = updateLabel == null ? 0 : this.textRenderer.getWidth(updateLabel) + 16;
+		int updateW = updateLabel == null && !checking ? 0
+				: (updateLabel != null ? this.textRenderer.getWidth(updateLabel) + 16 : 28);
 
-		// 头衔徽章 + 状态徽章（质感样式）
+		// 头衔徽章 + 状态徽章
 		PermissionDetector.Rank rank = PermissionDetector.currentRank();
 		int rankW = this.textRenderer.getWidth(rank.label) + 14;
 		int rankX = this.panelX + this.panelW - 10 - rankW;
@@ -451,8 +452,17 @@ public class MainMenuScreen extends Screen {
 		if (updateW > 0) {
 			int upX = rankX - 6 - updateW;
 			int upY = rankY;
-			GuiKit.badge(context, upX, upY, updateW, 16, updateLabel, this.textRenderer,
-					updateTint, open);
+			if (checking) {
+				// 检查中：显示进度条
+				TextureKit.draw(context, TextureKit.PROGRESS_BAR, upX, upY, updateW, 16);
+				// 旋转动画
+				float spin = (this.timeSec * 2.0f) % 1f;
+				TextureKit.draw(context, TextureKit.LOADING_SPINNER,
+						upX + (int) (updateW * spin) % updateW, upY + 4, 8, 8);
+			} else {
+				GuiKit.badge(context, upX, upY, updateW, 16, updateLabel, this.textRenderer,
+						updateTint, open);
+			}
 		}
 
 		String status = this.onServer ? ServerDetector.shortInfo() : "功能已锁定";
