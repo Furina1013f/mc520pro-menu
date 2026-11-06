@@ -235,10 +235,9 @@ public class CommandsScreen extends Screen {
 			String cmd = pageList.get(i);
 			boolean hovered = mouseX >= x && mouseX < x + this.chipW
 					&& mouseY >= y && mouseY < y + this.chipH;
-			GuiKit.roundedRect(context, x, y, this.chipW, this.chipH, 4,
-					GuiKit.withAlpha(hovered ? GuiKit.C_CARD_HOVER : GuiKit.C_CARD, open));
-			GuiKit.roundedRectStroke(context, x, y, this.chipW, this.chipH, 4,
-					GuiKit.withAlpha(hovered ? GuiKit.C_BORDER_GLOW : GuiKit.C_BORDER, open), 1f);
+			// 纹理绘制 chip
+			TextureKit.draw(context, hovered ? TextureKit.CARD_HOVER : TextureKit.CARD_NORMAL,
+					x, y, this.chipW, this.chipH);
 			context.drawCenteredTextWithShadow(this.textRenderer,
 					Text.literal(fit("/" + cmd, this.chipW - 6)), x + this.chipW / 2, y + 5,
 					GuiKit.withAlpha(hovered ? 0xFFFFFF : GuiKit.C_MUTED, open));

@@ -562,17 +562,17 @@ public class MainMenuScreen extends Screen {
 			y -= lift;
 			x += offsetX;
 
-			// 质感卡片
+			// 质感卡片（纹理绘制）
 			int accent = accentFor(cat);
 			float cardAlpha = open * contentAlpha * local;
 			boolean selected = hovered && !locked;
 			GuiKit.card(context, x, y, card.w, card.h, accent, cardAlpha, hovered, selected, locked);
 
-			// 图标徽章 + 文字首字（现代风格）
+			// 图标徽章 + 文字首字（纹理绘制）
 			int iconX = x + 8;
 			int iconY = y + (card.h - 20) / 2;
 			if (!locked) {
-				GuiKit.iconBadge(context, iconX, iconY, 20, accent, cardAlpha);
+				TextureKit.draw(context, TextureKit.ICON_BADGE, iconX, iconY, 20, 20);
 			}
 			drawIconText(context, card.entry.name(), iconX + 10, iconY + 10, accent, cardAlpha);
 
@@ -590,12 +590,9 @@ public class MainMenuScreen extends Screen {
 						GuiKit.withAlpha(locked ? GuiKit.C_DIM : GuiKit.C_MUTED, cardAlpha));
 				lineY += 10;
 			}
-			if (noPerm) {
-				// 无权限：橙色圆标
-				GuiKit.iconBadge(context, x + card.w - 9, y + 10, 5, GuiKit.C_DANGER, cardAlpha);
-			} else if (locked) {
-				// 锁定：红色圆标
-				GuiKit.iconBadge(context, x + card.w - 9, y + 10, 5, GuiKit.C_DANGER, cardAlpha);
+			if (noPerm || locked) {
+				// 无权限/锁定：红色圆点
+				TextureKit.draw(context, TextureKit.BADGE_DOT, x + card.w - 10, y + 8, 6, 6);
 			} else if (card.entry.mode() == CommandCatalog.Mode.COPY) {
 				// 带参数：右下角箭头 + 青色点（推断）
 				context.drawTextWithShadow(this.textRenderer, Text.literal("▶"),
