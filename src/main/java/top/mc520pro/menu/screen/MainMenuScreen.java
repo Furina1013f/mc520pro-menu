@@ -53,6 +53,7 @@ public class MainMenuScreen extends Screen {
 	private int tabsY;
 	private int descY;
 	private int gridY;
+	private int gridLeftPad;
 	private int visibleGridH;
 	private int naturalGridH;
 	private int scrollY;
@@ -160,18 +161,21 @@ public class MainMenuScreen extends Screen {
 		int W = this.width;
 		int H = this.height;
 		this.compact = H < 320;
+		// 侧边栏布局：左侧竖排导航 52px，右侧内容面板
 		this.headerH = this.compact ? 30 : 38;
-		this.panelW = Math.max(240, Math.min(460, W - OUTER_PAD * 2));
+		int sidebarW = 52;
+		this.panelW = Math.max(280, Math.min(520, W - OUTER_PAD * 2));
+		int contentW = this.panelW - sidebarW;
 		CommandCatalog.Category cat = this.categories.get(this.tab);
 		int entryCount = cat.entries().size();
 		// 列数按条目数自适应：条目少时用 3 列，一屏放完不必滚动
 		int cols;
 		if (entryCount <= 6) {
-			cols = this.panelW >= 330 ? 3 : (this.panelW >= 230 ? 2 : 1);
+			cols = contentW >= 330 ? 3 : (contentW >= 230 ? 2 : 1);
 		} else {
-			cols = this.panelW >= 380 ? 2 : 1;
+			cols = contentW >= 380 ? 2 : 1;
 		}
-		int cardW = (this.panelW - CARD_PAD_X * 2 - (cols - 1) * GAP) / cols;
+		int cardW = (contentW - CARD_PAD_X - (cols - 1) * GAP) / cols;
 
 		int descH = 12;
 		int footerH = this.compact ? 26 : 30;
@@ -179,8 +183,8 @@ public class MainMenuScreen extends Screen {
 		int rows = (entryCount + cols - 1) / cols;
 		this.naturalGridH = rows * cardH + Math.max(0, rows - 1) * GAP;
 
-		// 固定区：横幅 + 页签 + 说明行 + 底部按钮
-		int fixed = this.headerH + 4 + TAB_H + 3 + descH + 4 + footerH + 12;
+		// 固定区：横幅 + 说明行 + 底部按钮（页签移到侧栏）
+		int fixed = this.headerH + 4 + descH + 4 + footerH + 12;
 		int maxH = H - OUTER_PAD * 2;
 
 		if (fixed + this.naturalGridH <= maxH) {
@@ -205,31 +209,31 @@ public class MainMenuScreen extends Screen {
 				this.visibleGridH = cardH;
 			}
 		}
-		this.panelH = fixed + this.visibleGridH;
+		this.panelH = Math.max(fixed + this.visibleGridH, sidebarW * 2);
 		this.scrollable = this.visibleGridH < this.naturalGridH;
 
 		this.panelX = (W - this.panelW) / 2;
 		this.panelY = Math.max(4, (H - this.panelH) / 2);
 		this.tabsY = this.panelY + this.headerH + 6;
-		this.descY = this.tabsY + TAB_H + 4;
-		this.gridY = this.descY + descH + 6;
+		this.descY = this.panelY + this.headerH + 4 + sidebarW - 40;
+		this.gridY = this.panelY + this.headerH + 10 + descH;
+		// 侧栏内网格从 sidebarW 之后开始
+		this.gridLeftPad = sidebarW;
 		this.scrollY = clampi(this.scrollY, 0, Math.max(0, this.naturalGridH - this.visibleGridH));
 
-		int chipGap = 3;
-		int chipW = Math.min(TAB_W, (this.panelW - CARD_PAD_X * 2 - (this.categories.size() - 1) * chipGap)
-				/ this.categories.size());
-		int chipRowW = this.categories.size() * chipW + (this.categories.size() - 1) * chipGap;
-		int chipX = this.panelX + (this.panelW - chipRowW) / 2;
+		// 侧边栏：竖排页签（每个 44 高：图标徽章 + 分类名）
+		int sbY = this.panelY + this.headerH + 6;
+		int sbChipH = 42;
 		for (int i = 0; i < this.categories.size(); i++) {
-			this.chips.add(new TabChip(chipX + i * (chipW + chipGap), this.tabsY, chipW, TAB_H, i));
+			this.chips.add(new TabChip(this.panelX + 4, sbY + i * (sbChipH + 4), sidebarW - 8, sbChipH, i));
 		}
 
-		TextRenderer tr = this.textRenderer;
+		TextRenderer tr = UiFont.tr();
 		int usageMaxW = cardW - 32;
 		int maxLines = 2;
 		for (int i = 0; i < cat.entries().size(); i++) {
 			CommandCatalog.Entry e = cat.entries().get(i);
-			int cx = CARD_PAD_X + (i % cols) * (cardW + GAP);
+			int cx = sidebarW + CARD_PAD_X + (i % cols) * (cardW + GAP);
 			int cy = (i / cols) * (cardH + GAP);
 			List<String> lines = wrap(tr, e.usage(), usageMaxW, maxLines);
 			this.cards.add(new Card(cx, cy, cardW, cardH, e, lines));
@@ -237,9 +241,9 @@ public class MainMenuScreen extends Screen {
 
 		int pillH = this.compact ? 20 : 24;
 		int pillGap = GAP;
-		int pillW = Math.min(150, (this.panelW - CARD_PAD_X * 2 - pillGap * 2) / 3);
+		int pillW = Math.min(150, (contentW - CARD_PAD_X - pillGap * 2) / 3);
 		int pillY = this.panelY + this.panelH - pillH - 8;
-		int pillLeft = this.panelX + (this.panelW - (pillW * 3 + pillGap * 2)) / 2;
+		int pillLeft = this.panelX + sidebarW + (contentW - (pillW * 3 + pillGap * 2)) / 2;
 		this.pills.add(new Pill(pillLeft, pillY, pillW, pillH, "关于",
 				new ItemStack(Items.NAME_TAG), () -> {
 					MinecraftClient c = MinecraftClient.getInstance();
@@ -418,10 +422,10 @@ public class MainMenuScreen extends Screen {
 		context.fill(this.panelX + 11, titleY, this.panelX + 20, titleY + 7,
 				GuiKit.withAlpha(GuiKit.C_DANGER, open * glow * 0.4f));
 		drawHeart(context, this.panelX + 12, titleY + 1, open);
-		context.drawTextWithShadow(this.textRenderer, titleText, this.panelX + 26, titleY,
+		context.drawTextWithShadow(UiFont.tr(), titleText, this.panelX + 26, titleY,
 				GuiKit.withAlpha(0xFFFFFFFF, open));
 		if (!this.compact) {
-			context.drawTextWithShadow(this.textRenderer, Text.literal("服务器菜单 · 按 M 呼出"),
+			context.drawTextWithShadow(UiFont.tr(), Text.literal("服务器菜单 · 按 M 呼出"),
 					this.panelX + 26, this.panelY + 21, GuiKit.withAlpha(0xFFDCD2FF, open));
 		}
 
@@ -436,17 +440,17 @@ public class MainMenuScreen extends Screen {
 			UpdateChecker.checkAsync();
 		}
 		int updateW = updateLabel == null && !checking ? 0
-				: (updateLabel != null ? this.textRenderer.getWidth(updateLabel) + 16 : 28);
+				: (updateLabel != null ? UiFont.tr().getWidth(updateLabel) + 16 : 28);
 
 		// 头衔徽章 + 状态徽章
 		PermissionDetector.Rank rank = PermissionDetector.currentRank();
-		int rankW = this.textRenderer.getWidth(rank.label) + 14;
+		int rankW = UiFont.tr().getWidth(rank.label) + 14;
 		int rankX = this.panelX + this.panelW - 10 - rankW;
 		if (updateW > 0) {
 			rankX -= updateW + 6;
 		}
 		int rankY = this.panelY + (this.compact ? 6 : 9);
-		GuiKit.badge(context, rankX, rankY, rankW, 16, rank.label, this.textRenderer,
+		GuiKit.badge(context, rankX, rankY, rankW, 16, rank.label, UiFont.tr(),
 				rank.color, open);
 
 		if (updateW > 0) {
@@ -460,14 +464,14 @@ public class MainMenuScreen extends Screen {
 				TextureKit.draw(context, TextureKit.LOADING_SPINNER,
 						upX + (int) (updateW * spin) % updateW, upY + 4, 8, 8);
 			} else {
-				GuiKit.badge(context, upX, upY, updateW, 16, updateLabel, this.textRenderer,
+				GuiKit.badge(context, upX, upY, updateW, 16, updateLabel, UiFont.tr(),
 						updateTint, open);
 			}
 		}
 
 		String status = this.onServer ? ServerDetector.shortInfo() : "功能已锁定";
 		int badgeH = 16;
-		int badgeW = Math.min(this.textRenderer.getWidth(status) + 22,
+		int badgeW = Math.min(UiFont.tr().getWidth(status) + 22,
 				Math.max(84, this.panelW / 2));
 		badgeW = Math.min(badgeW, Math.max(60, rankX - this.panelX - 24));
 		int badgeX = rankX - 6 - badgeW;
@@ -477,10 +481,10 @@ public class MainMenuScreen extends Screen {
 		float pulse = 0.55f + 0.45f * (float) Math.sin(this.timeSec * 4.0);
 		context.fill(badgeX + 5, badgeY + 6, badgeX + 9, badgeY + 10,
 				GuiKit.withAlpha(GuiKit.mix(badgeColor, 0xFFFFFFFF, 0.5f), open * pulse));
-		GuiKit.badge(context, badgeX, badgeY, badgeW, badgeH, status, this.textRenderer,
+		GuiKit.badge(context, badgeX, badgeY, badgeW, badgeH, status, UiFont.tr(),
 				badgeColor, open);
 
-		// 分类页签（选中态有滑动高亮）
+		// 侧边栏竖排页签
 		TabChip hoveredChip = null;
 		for (TabChip chip : this.chips) {
 			CommandCatalog.Category c = this.categories.get(chip.index);
@@ -488,18 +492,21 @@ public class MainMenuScreen extends Screen {
 			boolean hovered = !active && mouseX >= chip.x && mouseX < chip.x + chip.w
 					&& mouseY >= chip.y && mouseY < chip.y + chip.h;
 			int accent = accentFor(c);
-			int bg = active ? GuiKit.mix(accent, 0xFFFFFFFF, 0.3f) : (hovered ? GuiKit.mix(accent, 0xFFFFFFFF, 0.15f) : 0xFF1A1A2E);
-			context.fill(chip.x, chip.y, chip.x + chip.w, chip.y + chip.h, GuiKit.withAlpha(bg, open));
-			int borderColor = active ? accent : (hovered ? GuiKit.C_BORDER_HI : GuiKit.C_BORDER);
-			outline(context, chip.x, chip.y, chip.w, chip.h, GuiKit.withAlpha(borderColor, open));
-			// 图标徽章 + 文字首字（现代风格，不用 MC 物品图标）
-			GuiKit.iconBadge(context, chip.x + (chip.w - 14) / 2, chip.y + 3, 14, accent, open);
-			drawIconText(context, c.title(), chip.x + chip.w / 2, chip.y + 10, accent, open);
-			context.drawCenteredTextWithShadow(this.textRenderer,
-					Text.literal(fit(c.title(), chip.w - 2)), chip.x + chip.w / 2, chip.y + 19,
+			// 背景：选中 = 亮玻璃，悬停 = 中玻璃，普通 = 暗玻璃
+			String tex = active ? TextureKit.CARD_SELECTED : (hovered ? TextureKit.CARD_HOVER : TextureKit.CARD_NORMAL);
+			TextureKit.draw(context, tex, chip.x, chip.y, chip.w, chip.h);
+			// 图标徽章 + 首字
+			int badgeSize = 18;
+			TextureKit.draw(context, TextureKit.ICON_BADGE, chip.x + (chip.w - badgeSize) / 2, chip.y + 4, badgeSize, badgeSize);
+			context.drawCenteredTextWithShadow(UiFont.tr(), Text.literal(c.title().substring(0, 1)),
+					chip.x + chip.w / 2, chip.y + 7, GuiKit.withAlpha(accent, open));
+			// 分类名
+			context.drawCenteredTextWithShadow(UiFont.tr(), Text.literal(c.title()),
+					chip.x + chip.w / 2, chip.y + 26,
 					GuiKit.withAlpha(active ? 0xFFFFFFFF : GuiKit.C_MUTED, open));
+			// 选中左条
 			if (active) {
-				context.fill(chip.x + 4, chip.y + chip.h - 3, chip.x + chip.w - 4, chip.y + chip.h - 1,
+				context.fill(chip.x - 2, chip.y + 4, chip.x + 1, chip.y + chip.h - 4,
 						GuiKit.withAlpha(accent, open));
 			}
 			if (hovered) {
@@ -507,7 +514,7 @@ public class MainMenuScreen extends Screen {
 			}
 		}
 
-		// 选中态滑动光标：在旧页签与新页签之间插值
+		// 选中态滑动光标：竖排 y 插值，带弹性超调
 		if (this.tabT < 1f && this.prevTab >= 0 && this.prevTab < this.chips.size()) {
 			TabChip from = this.chips.get(this.prevTab);
 			TabChip to = this.chips.get(this.tab);
@@ -516,32 +523,31 @@ public class MainMenuScreen extends Screen {
 			int sw = Math.round(from.w + (to.w - from.w) * k);
 			int sy = Math.round(from.y + (to.y - from.y) * k);
 			int sh = Math.round(from.h + (to.h - from.h) * k);
-			// 光标带一点弹性（超调再回落），更利落
 			float over = (float) Math.sin(Math.min(1f, this.tabT) * Math.PI) * 3f;
-			context.fill(sx, sy - (int) over, sx + sw, sy - (int) over + sh,
-					withAlpha(0x38FFFFFF, open));
-			outline(context, sx, sy - (int) over, sw, sh, withAlpha(0xFFFFFFFF, open));
+			TextureKit.draw(context, TextureKit.CARD_HOVER, sx, sy - (int) over, sw, sh);
 		}
 
-		// 分类说明行
-		context.fill(this.panelX + CARD_PAD_X, this.descY + 2, this.panelX + CARD_PAD_X + 3,
+		// 分类说明行（右侧内容区）
+		int contentStartX = this.panelX + this.gridLeftPad + CARD_PAD_X;
+		context.fill(contentStartX, this.descY + 2, contentStartX + 3,
 				this.descY + 9, withAlpha(0xFFFF5C7A, open));
-		context.drawTextWithShadow(this.textRenderer, Text.literal(cat.title()),
-				this.panelX + CARD_PAD_X + 8, this.descY, withAlpha(0xFFFFFFFF, open));
-		context.drawTextWithShadow(this.textRenderer,
-				Text.literal(fit("· " + cat.desc(), this.panelW - CARD_PAD_X * 2 - 8 - this.textRenderer.getWidth(cat.title()))),
-				this.panelX + CARD_PAD_X + 12 + this.textRenderer.getWidth(cat.title()), this.descY,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(cat.title()),
+				contentStartX + 8, this.descY, withAlpha(0xFFFFFFFF, open));
+		context.drawTextWithShadow(UiFont.tr(),
+				Text.literal(fit("· " + cat.desc(), this.panelX + this.panelW - contentStartX - 16 - UiFont.tr().getWidth(cat.title()))),
+				contentStartX + 12 + UiFont.tr().getWidth(cat.title()), this.descY,
 				withAlpha(0xFF9C93C4, open));
 
-		// 卡片（滚动视口 + 裁剪 + 入场动画）
+		// 卡片（滚动视口 + 裁剪 + 入场动画）；裁剪避开侧栏
 		int viewTop = this.gridY;
 		int viewBottom = this.gridY + this.visibleGridH;
-		context.enableScissor(this.panelX + 2, viewTop, this.panelX + this.panelW - 2, viewBottom);
+		context.enableScissor(this.panelX + this.gridLeftPad - 2, viewTop,
+				this.panelX + this.panelW - 8, viewBottom);
 		Card hoveredCard = null;
 		int cardIndex = 0;
 		int cardCount = this.cards.size();
 		for (Card card : this.cards) {
-			int x = this.panelX + card.x;
+			int x = this.panelX + this.gridLeftPad + card.x;
 			// 切换时整体位移 + 淡入；卡片逐个错峰入场
 			float stagger = cardCount <= 1 ? 1f
 					: clamp01((this.cardT - (float) cardIndex / cardCount * 0.5f) / 0.5f);
@@ -578,7 +584,7 @@ public class MainMenuScreen extends Screen {
 
 			int textX = x + 32;
 			int nameColor = locked ? GuiKit.C_DIM : 0xFFFFFFFF;
-			context.drawTextWithShadow(this.textRenderer,
+			context.drawTextWithShadow(UiFont.tr(),
 					Text.literal(fit(card.entry.name(), card.w - 36)), textX, y + 4,
 					GuiKit.withAlpha(nameColor, cardAlpha));
 			int lineY = y + 15;
@@ -586,7 +592,7 @@ public class MainMenuScreen extends Screen {
 				if (lineY + 9 > y + card.h) {
 					break;
 				}
-				context.drawTextWithShadow(this.textRenderer, Text.literal(line), textX, lineY,
+				context.drawTextWithShadow(UiFont.tr(), Text.literal(line), textX, lineY,
 						GuiKit.withAlpha(locked ? GuiKit.C_DIM : GuiKit.C_MUTED, cardAlpha));
 				lineY += 10;
 			}
@@ -595,7 +601,7 @@ public class MainMenuScreen extends Screen {
 				TextureKit.draw(context, TextureKit.BADGE_DOT, x + card.w - 10, y + 8, 6, 6);
 			} else if (card.entry.mode() == CommandCatalog.Mode.COPY) {
 				// 带参数：右下角箭头 + 青色点（推断）
-				context.drawTextWithShadow(this.textRenderer, Text.literal("▶"),
+				context.drawTextWithShadow(UiFont.tr(), Text.literal("▶"),
 						x + card.w - 10, y + card.h - 13, GuiKit.withAlpha(GuiKit.C_SUCCESS, cardAlpha));
 				if (!card.entry.fromDoc()) {
 					GuiKit.iconBadge(context, x + card.w - 7, y + card.h - 7, 3, GuiKit.C_ACCENT2, cardAlpha);
@@ -635,7 +641,7 @@ public class MainMenuScreen extends Screen {
 				pillColor = GuiKit.C_ACCENT2;
 			}
 			GuiKit.pill(context, pill.x, pill.y, pill.w, pill.h, fit(pill.label, pill.w - 20),
-					this.textRenderer, hovered, pillColor, open, false);
+					UiFont.tr(), hovered, pillColor, open, false);
 			if (hovered) {
 				hoveredPill = pill;
 			}
@@ -648,7 +654,7 @@ public class MainMenuScreen extends Screen {
 				this.toast = null;
 			} else {
 				float a = clamp(left / 400f) * open;
-				int w = this.textRenderer.getWidth(this.toast) + 16;
+				int w = UiFont.tr().getWidth(this.toast) + 16;
 				int tx = this.panelX + (this.panelW - w) / 2;
 				int ty = this.panelY + this.panelH + 6;
 				if (ty + 18 > this.height) {
@@ -656,7 +662,7 @@ public class MainMenuScreen extends Screen {
 				}
 				context.fill(tx, ty, tx + w, ty + 18, withAlpha(0xE0100F1C, a));
 				outline(context, tx, ty, w, 18, withAlpha(0xFF7C6BD9, a));
-				context.drawTextWithShadow(this.textRenderer, Text.literal(this.toast), tx + 8, ty + 5,
+				context.drawTextWithShadow(UiFont.tr(), Text.literal(this.toast), tx + 8, ty + 5,
 						withAlpha(0xFFFFFFFF, a));
 			}
 		}
@@ -684,7 +690,7 @@ public class MainMenuScreen extends Screen {
 
 	private void drawTooltip(DrawContext context, int mouseX, int mouseY, String name, String usage,
 			String command, String hint, boolean locked, float alpha) {
-		List<String> usageLines = wrap(this.textRenderer, usage, 180, 3);
+		List<String> usageLines = wrap(UiFont.tr(), usage, 180, 3);
 		List<String> lines = new ArrayList<>();
 		lines.add(name + (command.isEmpty() ? "" : "  " + command));
 		lines.addAll(usageLines);
@@ -692,7 +698,7 @@ public class MainMenuScreen extends Screen {
 
 		int w = 0;
 		for (String l : lines) {
-			w = Math.max(w, this.textRenderer.getWidth(l));
+			w = Math.max(w, UiFont.tr().getWidth(l));
 		}
 		w += 14;
 		int h = lines.size() * 11 + 8;
@@ -705,20 +711,20 @@ public class MainMenuScreen extends Screen {
 		for (int i = 0; i < lines.size(); i++) {
 			int color = i == 0 ? 0xFFFFFFFF
 					: (i == lines.size() - 1 ? (locked ? 0xFFFF8F9A : 0xFF97F5B4) : 0xFFB9AEDC);
-			context.drawTextWithShadow(this.textRenderer, Text.literal(lines.get(i)), tx + 7, yy,
+			context.drawTextWithShadow(UiFont.tr(), Text.literal(lines.get(i)), tx + 7, yy,
 					withAlpha(color, alpha));
 			yy += 11;
 		}
 	}
 
 	private void drawSimpleTooltip(DrawContext context, int mouseX, int mouseY, String text, float alpha) {
-		int w = this.textRenderer.getWidth(text) + 12;
+		int w = UiFont.tr().getWidth(text) + 12;
 		int h = 16;
 		int tx = Math.min(mouseX + 12, this.width - w - 6);
 		int ty = Math.max(4, Math.min(mouseY - 10, this.height - h - 6));
 		context.fill(tx, ty, tx + w, ty + h, withAlpha(0xF8100F1C, alpha));
 		outline(context, tx, ty, w, h, withAlpha(0xFF7C6BD9, alpha));
-		context.drawTextWithShadow(this.textRenderer, Text.literal(text), tx + 6, ty + 5,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(text), tx + 6, ty + 5,
 				withAlpha(0xFFFFFFFF, alpha));
 	}
 
@@ -758,7 +764,7 @@ public class MainMenuScreen extends Screen {
 	/** 在图标徽章中央画文字首字（现代图标）。 */
 	private void drawIconText(DrawContext ctx, String label, int cx, int cy, int color, float alpha) {
 		String ch = label != null && label.length() > 0 ? label.substring(0, 1) : "";
-		ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(ch), cx, cy - 6,
+		ctx.drawCenteredTextWithShadow(UiFont.tr(), Text.literal(ch), cx, cy - 6,
 				GuiKit.withAlpha(color, alpha));
 	}
 
@@ -898,11 +904,11 @@ public class MainMenuScreen extends Screen {
 		if (text == null) {
 			return "";
 		}
-		if (this.textRenderer.getWidth(text) <= maxWidth) {
+		if (UiFont.tr().getWidth(text) <= maxWidth) {
 			return text;
 		}
 		String out = text;
-		while (out.length() > 1 && this.textRenderer.getWidth(out + "…") > maxWidth) {
+		while (out.length() > 1 && UiFont.tr().getWidth(out + "…") > maxWidth) {
 			out = out.substring(0, out.length() - 1);
 		}
 		return out + "…";

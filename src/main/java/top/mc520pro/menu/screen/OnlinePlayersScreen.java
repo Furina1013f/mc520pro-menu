@@ -119,12 +119,12 @@ public class OnlinePlayersScreen extends Screen {
 		context.fillGradient(px + 2, py + 2, px + pw - 2, py + 26, GuiKit.withAlpha(h1, open), GuiKit.withAlpha(h2, open));
 		context.fillGradient(px + 2, py + 24, px + pw - 2, py + 32, GuiKit.withAlpha(h2, open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, open * 0.8f));
 
-		context.drawTextWithShadow(this.textRenderer,
+		context.drawTextWithShadow(UiFont.tr(),
 				Text.literal("在线玩家").styled(s -> s.withBold(true)), px + 14, py + 7,
 				GuiKit.withAlpha(0xFFFFFFFF, open));
 		String count = this.players.size() + " 人在线"
 				+ (ServerDetector.isOnServer() ? " · 点击右侧按钮直接操作" : " · 未连接服务器，列表为本地数据");
-		context.drawTextWithShadow(this.textRenderer, Text.literal(count), px + 14, py + 19,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(count), px + 14, py + 19,
 				GuiKit.withAlpha(0xFFE0E0FF, open));
 
 		int viewBottom = this.listTop + this.listH;
@@ -134,10 +134,10 @@ public class OnlinePlayersScreen extends Screen {
 			// 空状态说明
 			int cx = px + pw / 2;
 			int cy = this.listTop + 6;
-			context.drawCenteredTextWithShadow(this.textRenderer,
+			context.drawCenteredTextWithShadow(UiFont.tr(),
 					Text.literal(ServerDetector.isOnServer() ? "暂无其他在线玩家" : "未连接到服务器"),
 					cx, cy, GuiKit.withAlpha(GuiKit.C_MUTED, open));
-			context.drawCenteredTextWithShadow(this.textRenderer,
+			context.drawCenteredTextWithShadow(UiFont.tr(),
 					Text.literal(ServerDetector.isOnServer()
 							? "稍等片刻或刷新菜单即可看到最新列表"
 							: "进入 " + ServerDetector.SERVER_HOST + " 后即可查看在线玩家"),
@@ -166,7 +166,7 @@ public class OnlinePlayersScreen extends Screen {
 			int pingX = r.x + r.w - BTN_W * 2 - 42;
 			// 名字
 			String nameText = fit(r.player.name(), 90);
-			context.drawTextWithShadow(this.textRenderer,
+			context.drawTextWithShadow(UiFont.tr(),
 					Text.literal(nameText), textX, y + 7,
 					GuiKit.withAlpha(self ? GuiKit.C_GOLD : 0xFFFFFFFF, open));
 			// 头衔/显示名
@@ -174,10 +174,10 @@ public class OnlinePlayersScreen extends Screen {
 			if (disp != null && !disp.isEmpty()) {
 				String plain = disp.replaceAll("§.", "");
 				if (!plain.equals(r.player.name())) {
-					int titleX = textX + this.textRenderer.getWidth(nameText) + 8;
+					int titleX = textX + UiFont.tr().getWidth(nameText) + 8;
 					int titleMax = Math.max(0, pingX - titleX - 6);
 					if (titleMax > 24) {
-						context.drawTextWithShadow(this.textRenderer,
+						context.drawTextWithShadow(UiFont.tr(),
 								Text.literal(fit(plain, titleMax)), titleX, y + 7,
 								GuiKit.withAlpha(GuiKit.C_MUTED, open));
 					}
@@ -187,7 +187,7 @@ public class OnlinePlayersScreen extends Screen {
 			String ping = r.player.latency() >= 0 ? r.player.latency() + "ms" : "?ms";
 			int pingColor = r.player.latency() < 80 ? GuiKit.C_SUCCESS
 					: (r.player.latency() < 160 ? GuiKit.C_WARNING : GuiKit.C_DANGER);
-			context.drawTextWithShadow(this.textRenderer, Text.literal(ping), pingX, y + 7,
+			context.drawTextWithShadow(UiFont.tr(), Text.literal(ping), pingX, y + 7,
 					GuiKit.withAlpha(pingColor, open));
 
 			// 两个操作按钮
@@ -209,7 +209,7 @@ public class OnlinePlayersScreen extends Screen {
 		int backX = px + (pw - btnW) / 2;
 		boolean backHover = mouseX >= backX && mouseX < backX + btnW && mouseY >= btnY
 				&& mouseY < btnY + btnH;
-		GuiKit.pill(context, backX, btnY, btnW, btnH, "← 返回", this.textRenderer, backHover,
+		GuiKit.pill(context, backX, btnY, btnW, btnH, "← 返回", UiFont.tr(), backHover,
 				GuiKit.C_ACCENT, open, false);
 
 		if (this.toast != null) {
@@ -218,12 +218,12 @@ public class OnlinePlayersScreen extends Screen {
 				this.toast = null;
 			} else {
 				float ta = GuiKit.withAlpha(GuiKit.C_MUTED, open * Math.min(1f, left / 400f));
-				int tw = this.textRenderer.getWidth(this.toast) + 16;
+				int tw = UiFont.tr().getWidth(this.toast) + 16;
 				int tx = px + (pw - tw) / 2;
 				int ty = btnY - 20;
 				GuiKit.roundedRectA(context, tx, ty, tw, 17, 4, 0xCC1A1A2E, open * Math.min(1f, left / 400f));
 				GuiKit.roundedRectStroke(context, tx, ty, tw, 17, 4, GuiKit.C_BORDER, open * Math.min(1f, left / 400f));
-				context.drawTextWithShadow(this.textRenderer, Text.literal(this.toast), tx + 8, ty + 5,
+				context.drawTextWithShadow(UiFont.tr(), Text.literal(this.toast), tx + 8, ty + 5,
 						GuiKit.withAlpha(GuiKit.C_WARNING, open * Math.min(1f, left / 400f)));
 			}
 		}
@@ -243,18 +243,18 @@ public class OnlinePlayersScreen extends Screen {
 		int tint = action.equals("tpa") ? GuiKit.C_SUCCESS : GuiKit.C_BLUE;
 		GuiKit.roundedRectA(context, x, y, BTN_W, 18, 4, enabled ? tint : 0x301A1A28, open);
 		GuiKit.roundedRectStroke(context, x, y, BTN_W, 18, 4, enabled ? tint : GuiKit.C_DIM, open);
-		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label),
+		context.drawCenteredTextWithShadow(UiFont.tr(), Text.literal(label),
 				x + BTN_W / 2, y + 5, GuiKit.withAlpha(enabled ? 0xFFFFFFFF : GuiKit.C_DIM, open));
 	}
 
 	private void drawHint(DrawContext context, int mouseX, int mouseY, String text, float open) {
-		int w = this.textRenderer.getWidth(text) + 14;
+		int w = UiFont.tr().getWidth(text) + 14;
 		int h = 18;
 		int tx = Math.min(mouseX + 12, this.width - w - 6);
 		int ty = Math.max(4, Math.min(mouseY - 10, this.height - h - 6));
 		GuiKit.roundedRectA(context, tx, ty, w, h, 4, 0xCC1A1A2E, open);
 		GuiKit.roundedRectStroke(context, tx, ty, w, h, 4, GuiKit.C_BORDER, open);
-		context.drawTextWithShadow(this.textRenderer, Text.literal(text), tx + 7, ty + 5,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(text), tx + 7, ty + 5,
 				GuiKit.withAlpha(0xFFE0E0FF, open));
 	}
 
@@ -342,11 +342,11 @@ public class OnlinePlayersScreen extends Screen {
 		if (text == null) {
 			return "";
 		}
-		if (this.textRenderer.getWidth(text) <= maxWidth) {
+		if (UiFont.tr().getWidth(text) <= maxWidth) {
 			return text;
 		}
 		String out = text;
-		while (out.length() > 1 && this.textRenderer.getWidth(out + "…") > maxWidth) {
+		while (out.length() > 1 && UiFont.tr().getWidth(out + "…") > maxWidth) {
 			out = out.substring(0, out.length() - 1);
 		}
 		return out + "…";

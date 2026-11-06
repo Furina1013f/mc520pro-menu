@@ -157,7 +157,7 @@ public class CommandWizardScreen extends Screen {
 			} else if (f.type == PermissionDetector.ArgType.PLAYER) {
 				boxW -= 30;
 			}
-			TextFieldWidget box = new TextFieldWidget(this.textRenderer, px + 20,
+			TextFieldWidget box = new TextFieldWidget(UiFont.tr(), px + 20,
 					py + 52 + i * ROW_H + 13, Math.max(60, boxW), 18, Text.literal(f.label));
 			box.setMaxLength(80);
 			box.setText(f.value);
@@ -240,10 +240,10 @@ public class CommandWizardScreen extends Screen {
 		context.fillGradient(px + 2, py + 2, px + pw - 2, py + 26, GuiKit.withAlpha(h1, open), GuiKit.withAlpha(h2, open));
 		context.fillGradient(px + 2, py + 24, px + pw - 2, py + 32, GuiKit.withAlpha(h2, open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, open * 0.8f));
 
-		context.drawTextWithShadow(this.textRenderer,
+		context.drawTextWithShadow(UiFont.tr(),
 				Text.literal(this.entry.name()).styled(s -> s.withBold(true)), px + 16, py + 7,
 				GuiKit.withAlpha(0xFFFFFFFF, open));
-		context.drawTextWithShadow(this.textRenderer, Text.literal(fit(this.entry.usage(), pw - 24)),
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(fit(this.entry.usage(), pw - 24)),
 				px + 16, py + 19, GuiKit.withAlpha(0xFFE0E0FF, open));
 
 		// 参数标签
@@ -256,7 +256,7 @@ public class CommandWizardScreen extends Screen {
 				case TEXT -> "自由填写";
 				case WORD -> "填写名称";
 			};
-			context.drawTextWithShadow(this.textRenderer,
+			context.drawTextWithShadow(UiFont.tr(),
 					Text.literal(f.label + "  ·  " + hint), px + 20, rowY, GuiKit.withAlpha(GuiKit.C_MUTED, open));
 		}
 	}
@@ -281,8 +281,8 @@ public class CommandWizardScreen extends Screen {
 			if (f.type == PermissionDetector.ArgType.NUMBER) {
 				int textRight = px + pw - 56;
 				String num = String.valueOf(f.number);
-				int numW = this.textRenderer.getWidth(num);
-				context.drawTextWithShadow(this.textRenderer, Text.literal(num),
+				int numW = UiFont.tr().getWidth(num);
+				context.drawTextWithShadow(UiFont.tr(), Text.literal(num),
 						textRight - numW, boxY + 5, GuiKit.withAlpha(GuiKit.C_SUCCESS, open));
 				int bx = px + pw - 46;
 				drawSmall(context, bx, boxY, 20, 18, "−", open, mouseX, mouseY, f.number > f.min);
@@ -302,7 +302,7 @@ public class CommandWizardScreen extends Screen {
 		int previewY = py + ph - 62;
 		GuiKit.roundedRect(context, px + 14, previewY, pw - 28, 20, 4, GuiKit.withAlpha(0xCC1A1A2E, open));
 		GuiKit.roundedRectStroke(context, px + 14, previewY, pw - 28, 20, 4, GuiKit.C_BORDER, open);
-		context.drawTextWithShadow(this.textRenderer, Text.literal(fit("→ " + preview, pw - 36)),
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(fit("→ " + preview, pw - 36)),
 				px + 20, previewY + 6,
 				GuiKit.withAlpha(allFilled() ? GuiKit.C_SUCCESS : GuiKit.C_MUTED, open));
 
@@ -314,28 +314,28 @@ public class CommandWizardScreen extends Screen {
 		boolean canDo = allFilled();
 		boolean okHover = mouseX >= okX && mouseX < okX + okW && mouseY >= by && mouseY < by + btnH;
 		GuiKit.pill(context, okX, by, okW, btnH, canDo ? "完成并发送" : "请填写参数",
-				this.textRenderer, okHover, canDo ? GuiKit.C_SUCCESS : GuiKit.C_DIM, open, !canDo);
+				UiFont.tr(), okHover, canDo ? GuiKit.C_SUCCESS : GuiKit.C_DIM, open, !canDo);
 
 		// 返回按钮
 		int backW = 66;
 		int backX = px + 14;
 		boolean backHover = mouseX >= backX && mouseX < backX + backW && mouseY >= by
 				&& mouseY < by + btnH;
-		GuiKit.pill(context, backX, by, backW, btnH, "← 返回", this.textRenderer, backHover,
+		GuiKit.pill(context, backX, by, backW, btnH, "← 返回", UiFont.tr(), backHover,
 				GuiKit.C_ACCENT, open, false);
 
 		// 快捷键提示
 		String hint = "Enter 完成 · Esc 返回";
-		int hintW = this.textRenderer.getWidth(hint);
+		int hintW = UiFont.tr().getWidth(hint);
 		int hintLeft = backX + backW + 8;
 		int hintRightLimit = okX - 8;
 		if (hintRightLimit - hintLeft >= hintW) {
-			context.drawTextWithShadow(this.textRenderer, Text.literal(hint),
+			context.drawTextWithShadow(UiFont.tr(), Text.literal(hint),
 					hintLeft, by + 8, GuiKit.withAlpha(GuiKit.C_DIM, open));
 		}
 
 		if (this.toast != null) {
-			context.drawTextWithShadow(this.textRenderer, Text.literal(this.toast),
+			context.drawTextWithShadow(UiFont.tr(), Text.literal(this.toast),
 					px + 20, previewY - 12, GuiKit.withAlpha(GuiKit.C_WARNING, open));
 		}
 
@@ -351,7 +351,7 @@ public class CommandWizardScreen extends Screen {
 				GuiKit.withAlpha(!enabled ? 0x301A1A28 : (hov ? GuiKit.C_ACCENT : 0xCC1A1A2E), open));
 		GuiKit.roundedRectStroke(context, x, y, w, h, 4,
 				GuiKit.withAlpha(enabled ? GuiKit.C_ACCENT : GuiKit.C_DIM, open), 1f);
-		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label), x + w / 2, y + 5,
+		context.drawCenteredTextWithShadow(UiFont.tr(), Text.literal(label), x + w / 2, y + 5,
 				GuiKit.withAlpha(enabled ? 0xFFFFFFFF : GuiKit.C_DIM, open));
 	}
 
@@ -411,7 +411,7 @@ public class CommandWizardScreen extends Screen {
 		GuiKit.roundedRectStroke(context, listX, listY, listW, listH, 4, GuiKit.C_BORDER, open);
 
 		if (players.isEmpty()) {
-			context.drawTextWithShadow(this.textRenderer,
+			context.drawTextWithShadow(UiFont.tr(),
 					Text.literal("暂无其他在线玩家，可直接手动输入"), listX + 6, listY + 5,
 					GuiKit.withAlpha(GuiKit.C_MUTED, open));
 			return;
@@ -428,12 +428,12 @@ public class CommandWizardScreen extends Screen {
 				GuiKit.roundedRect(context, listX + 2, y - 1, listW - 4, 12, 2,
 						GuiKit.withAlpha(0x50FFFFFF, open));
 			}
-			context.drawTextWithShadow(this.textRenderer, Text.literal(players.get(i)), listX + 6, y,
+			context.drawTextWithShadow(UiFont.tr(), Text.literal(players.get(i)), listX + 6, y,
 					GuiKit.withAlpha(0xFFE0E0FF, open));
 			y += 12;
 		}
 		if (players.size() > visible) {
-			context.drawTextWithShadow(this.textRenderer,
+			context.drawTextWithShadow(UiFont.tr(),
 					Text.literal("滚轮翻页 " + (this.pickerScroll + 1) + "-"
 							+ Math.min(players.size(), this.pickerScroll + visible)
 							+ " / " + players.size()),
@@ -557,11 +557,11 @@ public class CommandWizardScreen extends Screen {
 		if (text == null) {
 			return "";
 		}
-		if (this.textRenderer.getWidth(text) <= maxWidth) {
+		if (UiFont.tr().getWidth(text) <= maxWidth) {
 			return text;
 		}
 		String out = text;
-		while (out.length() > 1 && this.textRenderer.getWidth(out + "…") > maxWidth) {
+		while (out.length() > 1 && UiFont.tr().getWidth(out + "…") > maxWidth) {
 			out = out.substring(0, out.length() - 1);
 		}
 		return out + "…";

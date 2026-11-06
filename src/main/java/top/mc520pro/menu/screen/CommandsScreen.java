@@ -140,7 +140,7 @@ public class CommandsScreen extends Screen {
 
 		// 搜索框（纹理背景 + 输入框；纹理自带放大镜在左侧 14px）
 		int searchY = this.panelY + headerH + infoH;
-		this.searchField = new net.minecraft.client.gui.widget.TextFieldWidget(this.textRenderer,
+		this.searchField = new net.minecraft.client.gui.widget.TextFieldWidget(UiFont.tr(),
 				this.panelX + 34, searchY + 2, this.panelW - 52, 18,
 				Text.literal("搜索指令"));
 		this.searchField.setMaxLength(40);
@@ -234,9 +234,9 @@ public class CommandsScreen extends Screen {
 		context.fillGradient(this.panelX + 2, this.panelY + 30, this.panelX + this.panelW - 2, this.panelY + 36,
 				GuiKit.withAlpha(h2, this.open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, this.open * 0.8f));
 
-		context.drawTextWithShadow(this.textRenderer, Text.literal("服务器指令清单"),
+		context.drawTextWithShadow(UiFont.tr(), Text.literal("服务器指令清单"),
 				this.panelX + 14, this.panelY + 6, GuiKit.withAlpha(0xFFFFFFFF, this.open));
-		context.drawTextWithShadow(this.textRenderer, Text.literal(ServerDetector.shortInfo()),
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(ServerDetector.shortInfo()),
 				this.panelX + 14, this.panelY + 19, GuiKit.withAlpha(0xFFE0E0FF, this.open));
 
 		int shown = filteredCommands().size();
@@ -247,7 +247,7 @@ public class CommandsScreen extends Screen {
 					: "匹配 " + shown + "/" + this.commands.size() + " 条 · 第 " + (this.page + 1) + "/"
 						+ pageCount() + " 页")
 				: "未连接 " + ServerDetector.SERVER_HOST + "，无法读取指令";
-		context.drawTextWithShadow(this.textRenderer, Text.literal(fit(info, this.panelW - 28)),
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(fit(info, this.panelW - 28)),
 				this.panelX + 14, this.panelY + 38, GuiKit.withAlpha(GuiKit.C_MUTED, this.open));
 
 		// 搜索框背景（纹理，画在输入框之下，与输入框同 Y 对齐）
@@ -266,12 +266,12 @@ public class CommandsScreen extends Screen {
 			int cy = this.gridTop + 8;
 			String line1 = this.onServer ? "服务器暂未下发任何指令" : "未连接到服务器";
 			String line2 = this.onServer ? "请稍后再试" : "进入 " + ServerDetector.SERVER_HOST + " 后即可查看并复制";
-			context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(line1), cx, cy,
+			context.drawCenteredTextWithShadow(UiFont.tr(), Text.literal(line1), cx, cy,
 					GuiKit.withAlpha(GuiKit.C_MUTED, open));
-			context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(line2), cx, cy + 13,
+			context.drawCenteredTextWithShadow(UiFont.tr(), Text.literal(line2), cx, cy + 13,
 					GuiKit.withAlpha(GuiKit.C_DIM, open));
 			context.fill(cx - 60, cy + 26, cx + 60, cy + 27, GuiKit.withAlpha(GuiKit.C_BORDER, open));
-			context.drawCenteredTextWithShadow(this.textRenderer,
+			context.drawCenteredTextWithShadow(UiFont.tr(),
 					Text.literal("菜单里的「分类指令」不依赖此页，照常可用"), cx, cy + 34,
 					GuiKit.withAlpha(GuiKit.C_DIM, open));
 		}
@@ -286,7 +286,7 @@ public class CommandsScreen extends Screen {
 			// 纹理绘制 chip
 			TextureKit.draw(context, hovered ? TextureKit.CARD_HOVER : TextureKit.CARD_NORMAL,
 					x, y, this.chipW, this.chipH);
-			context.drawCenteredTextWithShadow(this.textRenderer,
+			context.drawCenteredTextWithShadow(UiFont.tr(),
 					Text.literal(fit("/" + cmd, this.chipW - 6)), x + this.chipW / 2, y + 5,
 					GuiKit.withAlpha(hovered ? 0xFFFFFF : GuiKit.C_MUTED, open));
 		}
@@ -304,7 +304,7 @@ public class CommandsScreen extends Screen {
 				pillColor = GuiKit.C_ACCENT2;
 			}
 			GuiKit.pill(context, pill.x, pill.y, pill.w, pill.h, fit(pill.label, pill.w - 6),
-					this.textRenderer, hovered, pillColor, open, disabled);
+					UiFont.tr(), hovered, pillColor, open, disabled);
 		}
 	}
 
@@ -356,11 +356,11 @@ public class CommandsScreen extends Screen {
 		if (text == null) {
 			return "";
 		}
-		if (this.textRenderer.getWidth(text) <= maxWidth) {
+		if (UiFont.tr().getWidth(text) <= maxWidth) {
 			return text;
 		}
 		String out = text;
-		while (out.length() > 1 && this.textRenderer.getWidth(out + "…") > maxWidth) {
+		while (out.length() > 1 && UiFont.tr().getWidth(out + "…") > maxWidth) {
 			out = out.substring(0, out.length() - 1);
 		}
 		return out + "…";

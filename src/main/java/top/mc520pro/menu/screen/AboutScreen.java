@@ -51,17 +51,17 @@ public class AboutScreen extends Screen {
 		context.fillGradient(px + 2, py + 24, px + pw - 2, py + 32, GuiKit.withAlpha(h2, open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, open * 0.8f));
 
 		// 标题
-		context.drawTextWithShadow(this.textRenderer,
+		context.drawTextWithShadow(UiFont.tr(),
 				Text.literal("MC.520PRO.TOP 服务器菜单").styled(s -> s.withBold(true)),
 				px + 16, py + 7, GuiKit.withAlpha(0xFFFFFFFF, open));
-		context.drawTextWithShadow(this.textRenderer,
+		context.drawTextWithShadow(UiFont.tr(),
 				Text.literal("v" + ModInfo.version()), px + 16, py + 19, GuiKit.withAlpha(0xFFE0E0FF, open));
 
 		int y = py + 38;
 		// 更新状态
 		UpdateChecker.checkAsync();
 		UpdateChecker.Result upd = UpdateChecker.get();
-		context.drawTextWithShadow(this.textRenderer, Text.literal("更新"), px + 16, y,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal("更新"), px + 16, y,
 				GuiKit.withAlpha(GuiKit.C_MUTED, open));
 		String updText;
 		int updColor = GuiKit.C_MUTED;
@@ -77,33 +77,33 @@ public class AboutScreen extends Screen {
 		} else {
 			updText = "检查中…";
 		}
-		context.drawTextWithShadow(this.textRenderer, Text.literal(updText), px + 56, y,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(updText), px + 56, y,
 				GuiKit.withAlpha(updColor, open));
 		y += 16;
 
 		// 作者
-		context.drawTextWithShadow(this.textRenderer, Text.literal("作者"), px + 16, y,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal("作者"), px + 16, y,
 				GuiKit.withAlpha(GuiKit.C_MUTED, open));
-		context.drawTextWithShadow(this.textRenderer,
+		context.drawTextWithShadow(UiFont.tr(),
 				Text.literal(ModInfo.authors()).styled(s -> s.withBold(true)), px + 56, y,
 				GuiKit.withAlpha(GuiKit.C_GOLD, open));
 		y += 16;
 
 		// 当前状态
 		PermissionDetector.Rank rank = PermissionDetector.currentRank();
-		context.drawTextWithShadow(this.textRenderer, Text.literal("状态"), px + 16, y,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal("状态"), px + 16, y,
 				GuiKit.withAlpha(GuiKit.C_MUTED, open));
 		String state = ServerDetector.isOnServer()
 				? "已连接 " + ServerDetector.SERVER_HOST + " · " + rank.label
 				: "未连接（功能预览模式）";
-		context.drawTextWithShadow(this.textRenderer, Text.literal(state), px + 56, y,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal(state), px + 56, y,
 				GuiKit.withAlpha(ServerDetector.isOnServer() ? rank.color : GuiKit.C_MUTED, open));
 		y += 20;
 
 		// 更新日志
 		context.fill(px + 14, y, px + pw - 14, y + 1, GuiKit.withAlpha(GuiKit.C_BORDER, open));
 		y += 6;
-		context.drawTextWithShadow(this.textRenderer, Text.literal("更新日志"), px + 16, y,
+		context.drawTextWithShadow(UiFont.tr(), Text.literal("更新日志"), px + 16, y,
 				GuiKit.withAlpha(GuiKit.C_TEXT, open));
 		y += 14;
 
@@ -116,19 +116,19 @@ public class AboutScreen extends Screen {
 			}
 			if (!line[0].isEmpty()) {
 				// 版本号 + 星星
-				context.drawTextWithShadow(this.textRenderer,
+				context.drawTextWithShadow(UiFont.tr(),
 						Text.literal(line[0]).styled(s -> s.withBold(true)), px + 16, y,
 						GuiKit.withAlpha(GuiKit.C_SUCCESS, open));
 				// 星星图标
 				TextureKit.draw(context, TextureKit.STAR_FULL, px + pw - 20, y, 10, 10);
 				int descX = px + 52;
 				int descW = pw - 28 - 36;
-				context.drawTextWithShadow(this.textRenderer, Text.literal(fit(line[1], descW)),
+				context.drawTextWithShadow(UiFont.tr(), Text.literal(fit(line[1], descW)),
 						descX, y, GuiKit.withAlpha(0xFFE0E0FF, open));
 			} else {
 				int descX = px + 22;
 				int descW = pw - 28 - 10;
-				context.drawTextWithShadow(this.textRenderer, Text.literal(fit(line[1], descW)),
+				context.drawTextWithShadow(UiFont.tr(), Text.literal(fit(line[1], descW)),
 						descX, y, GuiKit.withAlpha(GuiKit.C_MUTED, open));
 			}
 			y += 12;
@@ -140,15 +140,15 @@ public class AboutScreen extends Screen {
 		boolean ghHover = mouseX >= px + 14 && mouseX < px + 14 + btnW && mouseY >= btnY && mouseY < btnY + btnH;
 		boolean afHover = mouseX >= px + 14 + btnW + gap && mouseX < px + 14 + (btnW + gap) * 2 && mouseY >= btnY && mouseY < btnY + btnH;
 		boolean backHover = mouseX >= px + 14 + (btnW + gap) * 2 && mouseX < px + 14 + (btnW + gap) * 2 + btnW && mouseY >= btnY && mouseY < btnY + btnH;
-		GuiKit.pill(context, px + 14, btnY, btnW, btnH, "GitHub", this.textRenderer, ghHover,
+		GuiKit.pill(context, px + 14, btnY, btnW, btnH, "GitHub", UiFont.tr(), ghHover,
 				GuiKit.C_BLUE, open, GITHUB_URL.isEmpty());
-		GuiKit.pill(context, px + 14 + btnW + gap, btnY, btnW, btnH, "爱发电", this.textRenderer, afHover,
+		GuiKit.pill(context, px + 14 + btnW + gap, btnY, btnW, btnH, "爱发电", UiFont.tr(), afHover,
 				GuiKit.C_PURPLE, open, AFDIAN_URL.isEmpty());
-		GuiKit.pill(context, px + 14 + (btnW + gap) * 2, btnY, btnW, btnH, "返回", this.textRenderer, backHover,
+		GuiKit.pill(context, px + 14 + (btnW + gap) * 2, btnY, btnW, btnH, "返回", UiFont.tr(), backHover,
 				GuiKit.C_ACCENT, open, false);
 
 		if (this.toast != null) {
-			context.drawTextWithShadow(this.textRenderer, Text.literal(this.toast), px + 16,
+			context.drawTextWithShadow(UiFont.tr(), Text.literal(this.toast), px + 16,
 					btnY - 14, GuiKit.withAlpha(GuiKit.C_WARNING, open));
 		}
 	}
@@ -216,11 +216,11 @@ public class AboutScreen extends Screen {
 		if (text == null) {
 			return "";
 		}
-		if (this.textRenderer.getWidth(text) <= maxWidth) {
+		if (UiFont.tr().getWidth(text) <= maxWidth) {
 			return text;
 		}
 		String out = text;
-		while (out.length() > 1 && this.textRenderer.getWidth(out + "…") > maxWidth) {
+		while (out.length() > 1 && UiFont.tr().getWidth(out + "…") > maxWidth) {
 			out = out.substring(0, out.length() - 1);
 		}
 		return out + "…";

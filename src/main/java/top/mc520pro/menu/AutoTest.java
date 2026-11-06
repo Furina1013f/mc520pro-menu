@@ -12,6 +12,7 @@ import top.mc520pro.menu.screen.CommandWizardScreen;
 import top.mc520pro.menu.screen.CommandsScreen;
 import top.mc520pro.menu.screen.MainMenuScreen;
 import top.mc520pro.menu.screen.OnlinePlayersScreen;
+import top.mc520pro.menu.screen.UiFont;
 
 /**
  * 开发自检（仅 -Dmc520pro.autotest=true 时启用，正常游戏不会执行）：
@@ -75,6 +76,9 @@ public final class AutoTest {
 			return;
 		}
 		menuTicks++;
+		if (menuTicks == 1) {
+			System.out.println("[mc520pro] custom font loaded: " + UiFont.isCustom());
+		}
 
 		if (menuTicks == 60) {
 			shot(client, "v10_tab0_tp");
