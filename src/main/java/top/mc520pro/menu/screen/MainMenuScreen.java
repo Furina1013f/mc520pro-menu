@@ -393,36 +393,42 @@ public class MainMenuScreen extends Screen {
 
 		CommandCatalog.Category cat = this.categories.get(this.tab);
 
-		// 面板底
-		context.fill(this.panelX - 2, this.panelY - 2, this.panelX + this.panelW + 2,
-				this.panelY + this.panelH + 2, withAlpha(0xFF3A3466, open));
-		context.fill(this.panelX, this.panelY, this.panelX + this.panelW,
-				this.panelY + this.panelH, withAlpha(0xF4110F20, open));
+		// 面板底（质感：阴影 + 渐变 + 边框）
+		GuiKit.panel(context, this.panelX, this.panelY, this.panelW, this.panelH, open);
 
-		// 顶部流动渐变横幅
+		// 顶部流动渐变横幅（更浓烈）
 		float phase = (this.timeSec * 0.12f) % 1f;
-		int h1 = mix(0xFF6C46C8, 0xFF2E6D9C, phase);
-		int h2 = mix(0xFF2E6D9C, 0xFF6C46C8, phase);
+		int h1 = GuiKit.mix(GuiKit.C_ACCENT, GuiKit.C_ACCENT2, phase);
+		int h2 = GuiKit.mix(GuiKit.C_ACCENT2, GuiKit.C_ACCENT, phase);
 		context.fillGradient(this.panelX, this.panelY, this.panelX + this.panelW,
-				this.panelY + this.headerH, withAlpha(h1, open), withAlpha(h2, open));
+				this.panelY + this.headerH, GuiKit.withAlpha(h1, open), GuiKit.withAlpha(h2, open));
+		// 横幅底部分隔 + 高光
 		context.fill(this.panelX, this.panelY + this.headerH,
-				this.panelX + this.panelW, this.panelY + this.headerH + 1, withAlpha(0xFFB6A4FF, open));
+				this.panelX + this.panelW, this.panelY + this.headerH + 1,
+				GuiKit.withAlpha(GuiKit.mix(h1, 0xFFFFFFFF, 0.5f), open));
+		context.fillGradient(this.panelX + 4, this.panelY + 2, this.panelX + this.panelW - 4,
+				this.panelY + 5, GuiKit.withAlpha(GuiKit.mix(h1, 0xFFFFFFFF, 0.4f), open),
+				GuiKit.withAlpha(h1, open * 0.5f));
 
 		// 横幅文字
 		Text titleText = Text.literal("MC.520PRO.TOP").styled(style -> style.withBold(true));
 		int titleY = this.panelY + (this.compact ? 5 : 8);
+		// 爱心带辉光
+		float glow = 0.5f + 0.3f * (float) Math.sin(this.timeSec * 3.0);
+		context.fill(this.panelX + 11, titleY, this.panelX + 20, titleY + 7,
+				GuiKit.withAlpha(GuiKit.C_DANGER, open * glow * 0.4f));
 		drawHeart(context, this.panelX + 12, titleY + 1, open);
 		context.drawTextWithShadow(this.textRenderer, titleText, this.panelX + 26, titleY,
-				withAlpha(0xFFFFFFFF, open));
+				GuiKit.withAlpha(0xFFFFFFFF, open));
 		if (!this.compact) {
 			context.drawTextWithShadow(this.textRenderer, Text.literal("服务器菜单 · 按 M 呼出"),
-					this.panelX + 26, this.panelY + 21, withAlpha(0xFFDCD2FF, open));
+					this.panelX + 26, this.panelY + 21, GuiKit.withAlpha(0xFFDCD2FF, open));
 		}
 
 		// 更新徽章（有新版本时显示）
 		UpdateChecker.Result upd = UpdateChecker.get();
 		String updateLabel = null;
-		int updateTint = 0xFFFFD766;
+		int updateTint = GuiKit.C_WARNING;
 		if (upd != null && upd.hasUpdate()) {
 			updateLabel = "有更新 v" + upd.latestVersion();
 		} else if (upd == null && !UpdateChecker.checking()) {
@@ -431,7 +437,7 @@ public class MainMenuScreen extends Screen {
 		}
 		int updateW = updateLabel == null ? 0 : this.textRenderer.getWidth(updateLabel) + 16;
 
-		// 头衔徽章（自动探测）+ 状态徽章
+		// 头衔徽章 + 状态徽章（质感样式）
 		PermissionDetector.Rank rank = PermissionDetector.currentRank();
 		int rankW = this.textRenderer.getWidth(rank.label) + 14;
 		int rankX = this.panelX + this.panelW - 10 - rankW;
@@ -439,18 +445,14 @@ public class MainMenuScreen extends Screen {
 			rankX -= updateW + 6;
 		}
 		int rankY = this.panelY + (this.compact ? 6 : 9);
-		context.fill(rankX, rankY, rankX + rankW, rankY + 16, withAlpha(0xC0100F1C, open));
-		outline(context, rankX, rankY, rankW, 16, withAlpha(rank.color, open));
-		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(rank.label),
-				rankX + rankW / 2, rankY + 4, withAlpha(rank.color, open));
+		GuiKit.badge(context, rankX, rankY, rankW, 16, rank.label, this.textRenderer,
+				rank.color, open);
 
 		if (updateW > 0) {
 			int upX = rankX - 6 - updateW;
 			int upY = rankY;
-			context.fill(upX, upY, upX + updateW, upY + 16, withAlpha(0xE0100F1C, open));
-			outline(context, upX, upY, updateW, 16, withAlpha(updateTint, open));
-			context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(updateLabel),
-					upX + updateW / 2, upY + 4, withAlpha(updateTint, open));
+			GuiKit.badge(context, upX, upY, updateW, 16, updateLabel, this.textRenderer,
+					updateTint, open);
 		}
 
 		String status = this.onServer ? ServerDetector.shortInfo() : "功能已锁定";
@@ -460,13 +462,13 @@ public class MainMenuScreen extends Screen {
 		badgeW = Math.min(badgeW, Math.max(60, rankX - this.panelX - 24));
 		int badgeX = rankX - 6 - badgeW;
 		int badgeY = this.panelY + (this.compact ? 6 : 9);
-		context.fill(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH,
-				withAlpha(this.onServer ? 0xFF1C7A4C : 0xFF8A2B37, open));
+		int badgeColor = this.onServer ? GuiKit.C_SUCCESS : GuiKit.C_DANGER;
+		// 脉冲点
 		float pulse = 0.55f + 0.45f * (float) Math.sin(this.timeSec * 4.0);
 		context.fill(badgeX + 5, badgeY + 6, badgeX + 9, badgeY + 10,
-				withAlpha(this.onServer ? 0xFF9CFFC9 : 0xFFFF9AA6, open * pulse));
-		context.drawTextWithShadow(this.textRenderer, Text.literal(fit(status, badgeW - 20)),
-				badgeX + 12, badgeY + 4, withAlpha(0xFFFFFFFF, open));
+				GuiKit.withAlpha(GuiKit.mix(badgeColor, 0xFFFFFFFF, 0.5f), open * pulse));
+		GuiKit.badge(context, badgeX, badgeY, badgeW, badgeH, status, this.textRenderer,
+				badgeColor, open);
 
 		// 分类页签（选中态有滑动高亮）
 		TabChip hoveredChip = null;
@@ -475,18 +477,20 @@ public class MainMenuScreen extends Screen {
 			boolean active = chip.index == this.tab;
 			boolean hovered = !active && mouseX >= chip.x && mouseX < chip.x + chip.w
 					&& mouseY >= chip.y && mouseY < chip.y + chip.h;
-			int bg = active ? mix(0xE6614FA6, 0xE63E5C8A, phase) : (hovered ? 0xD0282444 : 0x90181626);
-			context.fill(chip.x, chip.y, chip.x + chip.w, chip.y + chip.h, withAlpha(bg, open));
-			outline(context, chip.x, chip.y, chip.w, chip.h,
-					withAlpha(active ? 0xFFFFFFFF : 0xFF4A4470, open));
-			// 图标在上，分类名在下（10 个纯图标不可辨）
+			int accent = accentFor(c);
+			int bg = active ? GuiKit.mix(accent, 0xFFFFFFFF, 0.3f) : (hovered ? GuiKit.mix(accent, 0xFFFFFFFF, 0.15f) : 0xFF1A1A2E);
+			context.fill(chip.x, chip.y, chip.x + chip.w, chip.y + chip.h, GuiKit.withAlpha(bg, open));
+			int borderColor = active ? accent : (hovered ? GuiKit.C_BORDER_HI : GuiKit.C_BORDER);
+			outline(context, chip.x, chip.y, chip.w, chip.h, GuiKit.withAlpha(borderColor, open));
+			// 图标徽章
+			GuiKit.iconBadgeRect(context, chip.x + (chip.w - 16) / 2, chip.y + 2, 16, 16, accent, open);
 			context.drawItem(c.icon(), chip.x + (chip.w - 16) / 2, chip.y + 2);
 			context.drawCenteredTextWithShadow(this.textRenderer,
 					Text.literal(fit(c.title(), chip.w - 2)), chip.x + chip.w / 2, chip.y + 19,
-					withAlpha(active ? 0xFFFFFFFF : 0xFF9C93C4, open));
+					GuiKit.withAlpha(active ? 0xFFFFFFFF : GuiKit.C_MUTED, open));
 			if (active) {
 				context.fill(chip.x + 4, chip.y + chip.h - 3, chip.x + chip.w - 4, chip.y + chip.h - 1,
-						withAlpha(0xFFFF5C7A, open));
+						GuiKit.withAlpha(accent, open));
 			}
 			if (hovered) {
 				hoveredChip = chip;
@@ -548,49 +552,49 @@ public class MainMenuScreen extends Screen {
 			y -= lift;
 			x += offsetX;
 
-			int bg = locked ? 0xC0181626 : (hovered ? 0xE651408F : 0xD0241F3C);
-			context.fill(x, y, x + card.w, y + card.h,
-					withAlpha(bg, open * contentAlpha * local));
-			outline(context, x, y, card.w, card.h,
-					withAlpha(locked ? 0xFF3A3558 : (hovered ? 0xFFFFFFFF : 0xFF4A4470),
-							open * contentAlpha * local));
+			// 质感卡片
+			int accent = accentFor(cat);
+			float cardAlpha = open * contentAlpha * local;
+			boolean selected = hovered && !locked;
+			GuiKit.card(context, x, y, card.w, card.h, accent, cardAlpha, hovered, selected, locked);
 
-			context.drawItem(card.entry.icon(), x + 6, y + (card.h - 16) / 2);
+			// 图标徽章 + 图标
+			int iconX = x + 8;
+			int iconY = y + (card.h - 16) / 2;
+			if (!locked) {
+				GuiKit.iconBadgeRect(context, iconX - 2, iconY - 2, 20, 20, accent, cardAlpha);
+			}
+			context.drawItem(card.entry.icon(), iconX, iconY);
 
-			int textX = x + 26;
-			int nameColor = locked ? 0xFF9189AF : 0xFFFFFFFF;
+			int textX = x + 30;
+			int nameColor = locked ? GuiKit.C_DIM : 0xFFFFFFFF;
 			context.drawTextWithShadow(this.textRenderer,
-					Text.literal(fit(card.entry.name(), card.w - 32)), textX, y + 4,
-					withAlpha(nameColor, open * contentAlpha * local));
+					Text.literal(fit(card.entry.name(), card.w - 36)), textX, y + 4,
+					GuiKit.withAlpha(nameColor, cardAlpha));
 			int lineY = y + 15;
 			for (String line : card.usageLines) {
 				if (lineY + 9 > y + card.h) {
 					break;
 				}
 				context.drawTextWithShadow(this.textRenderer, Text.literal(line), textX, lineY,
-						withAlpha(locked ? 0xFF6C6588 : 0xFFB9AEE8, open * contentAlpha * local));
+						GuiKit.withAlpha(locked ? GuiKit.C_DIM : GuiKit.C_MUTED, cardAlpha));
 				lineY += 10;
 			}
 			if (noPerm) {
-				// 无权限：橙色小锁标
-				context.fill(x + card.w - 18, y + 3, x + card.w - 3, y + 15, withAlpha(0xD08A5A2B, open));
-				context.drawTextWithShadow(this.textRenderer, Text.literal("限"),
-						x + card.w - 15, y + 5, withAlpha(0xFFFFE0A8, open));
+				// 无权限：橙色圆标
+				GuiKit.iconBadge(context, x + card.w - 9, y + 10, 5, GuiKit.C_DANGER, cardAlpha);
 			} else if (locked) {
-				context.fill(x + card.w - 16, y + 3, x + card.w - 3, y + 16, withAlpha(0xD08A2B37, open));
-				drawX(context, x + card.w - 13, y + 6, 7, withAlpha(0xFFFFFFFF, open));
+				// 锁定：红色圆标
+				GuiKit.iconBadge(context, x + card.w - 9, y + 10, 5, GuiKit.C_DANGER, cardAlpha);
 			} else if (card.entry.mode() == CommandCatalog.Mode.COPY) {
-				// 带参数指令：右上角箭头，表示点击进入向导页
+				// 带参数：右下角箭头 + 青色点（推断）
 				context.drawTextWithShadow(this.textRenderer, Text.literal("▶"),
-						x + card.w - 12, y + 4, withAlpha(0xFF97F5B4, open));
+						x + card.w - 10, y + card.h - 13, GuiKit.withAlpha(GuiKit.C_SUCCESS, cardAlpha));
 				if (!card.entry.fromDoc()) {
-					context.fill(x + card.w - 10, y + card.h - 8, x + card.w - 6, y + card.h - 4,
-							withAlpha(0xFF5CE0D0, open));
+					GuiKit.iconBadge(context, x + card.w - 7, y + card.h - 7, 3, GuiKit.C_ACCENT2, cardAlpha);
 				}
 			} else if (!card.entry.fromDoc()) {
-				// 青色小点：插件推断指令（文档未收录）
-				context.fill(x + card.w - 10, y + card.h - 8, x + card.w - 6, y + card.h - 4,
-						withAlpha(0xFF5CE0D0, open));
+				GuiKit.iconBadge(context, x + card.w - 7, y + card.h - 7, 3, GuiKit.C_ACCENT2, cardAlpha);
 			}
 			if (hovered) {
 				hoveredCard = card;
@@ -598,34 +602,46 @@ public class MainMenuScreen extends Screen {
 		}
 		context.disableScissor();
 
-		// 滚动条
+		// 滚动条（质感）
 		if (this.scrollable) {
 			int trackH = this.visibleGridH;
 			int thumbH = Math.max(20, (int) ((long) trackH * trackH / this.naturalGridH));
 			int maxScroll = this.naturalGridH - this.visibleGridH;
 			int thumbY = viewTop + (maxScroll <= 0 ? 0 : (int) ((long) (trackH - thumbH) * this.scrollY / maxScroll));
 			int barX = this.panelX + this.panelW - 8;
-			context.fill(barX, viewTop, barX + 5, viewTop + trackH, withAlpha(0xFF39325C, open));
-			context.fill(barX, thumbY, barX + 5, thumbY + thumbH, withAlpha(0xFFA794F0, open));
+			context.fill(barX, viewTop, barX + 5, viewTop + trackH, GuiKit.withAlpha(0xFF1A1A2E, open));
+			context.fill(barX, thumbY, barX + 5, thumbY + thumbH, GuiKit.withAlpha(GuiKit.C_ACCENT, open));
+			context.fill(barX, thumbY, barX + 5, thumbY + 3, GuiKit.withAlpha(GuiKit.mix(GuiKit.C_ACCENT, 0xFFFFFFFF, 0.4f), open));
 		}
 
-		// 底部胶囊
+		// 底部胶囊按钮（质感）
 		Pill hoveredPill = null;
 		for (Pill pill : this.pills) {
 			boolean hovered = mouseX >= pill.x && mouseX < pill.x + pill.w
 					&& mouseY >= pill.y && mouseY < pill.y + pill.h;
-			int bg = hovered ? 0xE6624FA0 : 0xD02A2542;
-			context.fill(pill.x, pill.y, pill.x + pill.w, pill.y + pill.h, withAlpha(bg, open));
-			outline(context, pill.x, pill.y, pill.w, pill.h,
-					withAlpha(hovered ? 0xFFFFFFFF : 0xFF54497F, open));
+			int pillColor = GuiKit.C_ACCENT;
+			if (pill.label.equals("关闭")) {
+				pillColor = GuiKit.C_DANGER;
+			} else if (pill.label.equals("关于")) {
+				pillColor = GuiKit.C_PURPLE;
+			} else {
+				pillColor = GuiKit.C_ACCENT2;
+			}
+			GuiKit.pill(context, pill.x, pill.y, pill.w, pill.h, fit(pill.label, pill.w - 28),
+					this.textRenderer, hovered, pillColor, open, false);
+			// 图标
 			if (pill.icon.isEmpty()) {
-				drawX(context, pill.x + 8, pill.y + (pill.h - 9) / 2, 9, withAlpha(0xFFFFFFFF, open));
+				// X 图标（像素绘制）
+				int cx = pill.x + 11, cy = pill.y + pill.h / 2;
+				for (int i = 0; i < 8; i++) {
+					context.fill(cx - 4 + i, cy - 4 + i, cx - 4 + i + 1, cy - 4 + i + 1,
+							GuiKit.withAlpha(0xFFFFFFFF, open));
+					context.fill(cx + 4 - i, cy - 4 + i, cx + 4 - i + 1, cy - 4 + i + 1,
+							GuiKit.withAlpha(0xFFFFFFFF, open));
+				}
 			} else {
 				context.drawItem(pill.icon, pill.x + 5, pill.y + (pill.h - 16) / 2);
 			}
-			context.drawTextWithShadow(this.textRenderer,
-					Text.literal(fit(pill.label, pill.w - 28)), pill.x + 24,
-					pill.y + (pill.h - 8) / 2, withAlpha(0xFFFFFFFF, open));
 			if (hovered) {
 				hoveredPill = pill;
 			}
@@ -710,6 +726,39 @@ public class MainMenuScreen extends Screen {
 		outline(context, tx, ty, w, h, withAlpha(0xFF7C6BD9, alpha));
 		context.drawTextWithShadow(this.textRenderer, Text.literal(text), tx + 6, ty + 5,
 				withAlpha(0xFFFFFFFF, alpha));
+	}
+
+	/** 按分类返回强调色。 */
+	private static int accentFor(CommandCatalog.Category c) {
+		String t = c.title();
+		if (t.equals("传送")) {
+			return GuiKit.C_ACCENT2;
+		}
+		if (t.equals("领地")) {
+			return GuiKit.C_SUCCESS;
+		}
+		if (t.equals("市场")) {
+			return GuiKit.C_GOLD;
+		}
+		if (t.equals("MMO")) {
+			return GuiKit.C_ACCENT;
+		}
+		if (t.equals("趣味")) {
+			return GuiKit.C_PURPLE;
+		}
+		if (t.equals("社交")) {
+			return GuiKit.C_BLUE;
+		}
+		if (t.equals("经济")) {
+			return GuiKit.C_GOLD;
+		}
+		if (t.equals("工具")) {
+			return GuiKit.C_ACCENT2;
+		}
+		if (t.equals("防熊")) {
+			return GuiKit.C_DANGER;
+		}
+		return GuiKit.C_ACCENT;
 	}
 
 	private void outline(DrawContext context, int x, int y, int w, int h, int color) {
