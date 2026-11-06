@@ -6,8 +6,8 @@ import net.minecraft.util.Identifier;
 
 /**
  * 纹理渲染工具：每个 UI 元素一个独立 sprite（nine-slice 拉伸）。
- * sprite 位于 textures/gui/sprites/mc520pro/，带 mcmeta 定义九宫格边框。
- * drawGuiTexture 自动处理 sprite atlas 与 nine_slice 缩放。
+ * drawGuiTexture 的 ID 不含 textures/gui/sprites/ 前缀（框架自动补全），
+ * 文件实际位于 assets/mc520pro/textures/gui/sprites/mc520pro/<name>.png。
  */
 public final class TextureKit {
 	private static final String PREFIX = "mc520pro";
@@ -16,7 +16,7 @@ public final class TextureKit {
 	}
 
 	private static Identifier id(String name) {
-		return Identifier.of(PREFIX, "textures/gui/sprites/mc520pro/" + name);
+		return Identifier.of(PREFIX, "mc520pro/" + name);
 	}
 
 	/** 画一个 UI sprite（nine-slice 自动拉伸）。 */
