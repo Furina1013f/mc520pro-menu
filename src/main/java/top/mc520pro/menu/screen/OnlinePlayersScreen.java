@@ -109,35 +109,39 @@ public class OnlinePlayersScreen extends Screen {
 		int py = this.panelY;
 		int pw = this.panelW;
 
-		context.fill(px - 2, py - 2, px + pw + 2, py + this.panelH + 2, withAlpha(0xFF3A3466, open));
-		context.fill(px, py, px + pw, py + this.panelH, withAlpha(0xF4110F20, open));
-		context.fillGradient(px, py, px + pw, py + 30, withAlpha(0xFF6C46C8, open),
-				withAlpha(0xFF2E6D9C, open));
-		context.fill(px, py + 30, px + pw, py + 31, withAlpha(0xFFB6A4FF, open));
+		// 现代玻璃面板
+		GuiKit.glassPanel(context, px, py, pw, this.panelH, open);
+
+		// 头部渐变
+		float phase = ((now % 8000L) / 8000f);
+		int h1 = GuiKit.mix(GuiKit.C_ACCENT, GuiKit.C_ACCENT2, phase);
+		int h2 = GuiKit.mix(GuiKit.C_ACCENT2, GuiKit.C_ACCENT, phase);
+		context.fillGradient(px + 2, py + 2, px + pw - 2, py + 26, GuiKit.withAlpha(h1, open), GuiKit.withAlpha(h2, open));
+		context.fillGradient(px + 2, py + 24, px + pw - 2, py + 32, GuiKit.withAlpha(h2, open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, open * 0.8f));
 
 		context.drawTextWithShadow(this.textRenderer,
-				Text.literal("在线玩家").styled(s -> s.withBold(true)), px + 12, py + 6,
-				withAlpha(0xFFFFFFFF, open));
+				Text.literal("在线玩家").styled(s -> s.withBold(true)), px + 14, py + 7,
+				GuiKit.withAlpha(0xFFFFFFFF, open));
 		String count = this.players.size() + " 人在线"
 				+ (ServerDetector.isOnServer() ? " · 点击右侧按钮直接操作" : " · 未连接服务器，列表为本地数据");
-		context.drawTextWithShadow(this.textRenderer, Text.literal(count), px + 12, py + 19,
-				withAlpha(0xFFCFE4FF, open));
+		context.drawTextWithShadow(this.textRenderer, Text.literal(count), px + 14, py + 19,
+				GuiKit.withAlpha(0xFFE0E0FF, open));
 
 		int viewBottom = this.listTop + this.listH;
 		context.enableScissor(px + 2, this.listTop, px + pw - 2, viewBottom);
 
 		if (this.players.isEmpty()) {
-			// 空状态说明（离线或服务器还没下发列表）
+			// 空状态说明
 			int cx = px + pw / 2;
 			int cy = this.listTop + 6;
 			context.drawCenteredTextWithShadow(this.textRenderer,
 					Text.literal(ServerDetector.isOnServer() ? "暂无其他在线玩家" : "未连接到服务器"),
-					cx, cy, withAlpha(0xFF9C93C4, open));
+					cx, cy, GuiKit.withAlpha(GuiKit.C_MUTED, open));
 			context.drawCenteredTextWithShadow(this.textRenderer,
 					Text.literal(ServerDetector.isOnServer()
 							? "稍等片刻或刷新菜单即可看到最新列表"
 							: "进入 " + ServerDetector.SERVER_HOST + " 后即可查看在线玩家"),
-					cx, cy + 13, withAlpha(0xFF6E6890, open));
+					cx, cy + 13, GuiKit.withAlpha(GuiKit.C_DIM, open));
 		}
 
 		Row hoveredRow = null;
@@ -148,18 +152,23 @@ public class OnlinePlayersScreen extends Screen {
 			}
 			boolean hovered = mouseX >= r.x && mouseX < r.x + r.w && mouseY >= y && mouseY < y + ROW_H;
 			boolean self = r.player.self();
-			int bg = self ? 0xC0302A58 : (hovered ? 0xE62E2750 : 0xC81F1B36);
-			context.fill(r.x, y, r.x + r.w, y + ROW_H, withAlpha(bg, open));
-			outline(context, r.x, y, r.w, ROW_H, withAlpha(self ? 0xFF8F7FD9 : 0xFF3E3862, open));
+			// 现代行：圆角 + 玻璃 + 左侧强调条
+			int accent = self ? GuiKit.C_GOLD : GuiKit.C_ACCENT2;
+			int bg = hovered ? GuiKit.C_CARD_HOVER : GuiKit.C_CARD;
+			GuiKit.roundedRectA(context, r.x, y, r.w, ROW_H, 6, bg, open * (self ? 0.9f : 0.7f));
+			if (self) {
+				ctx_fill(context, r.x, y + 3, r.x + 3, y + ROW_H - 3, GuiKit.withAlpha(accent, open));
+			}
+			GuiKit.roundedRectStroke(context, r.x, y, r.w, ROW_H, 6, self ? accent : GuiKit.C_BORDER, open);
 
-			int textX = r.x + 8;
+			int textX = r.x + 10;
 			int pingX = r.x + r.w - BTN_W * 2 - 42;
-			// 名字（自己高亮金色）
+			// 名字
 			String nameText = fit(r.player.name(), 90);
 			context.drawTextWithShadow(this.textRenderer,
 					Text.literal(nameText), textX, y + 7,
-					withAlpha(self ? 0xFFFFD766 : 0xFFFFFFFF, open));
-			// 头衔/显示名：紧跟名字宽度，剥掉 § 颜色码
+					GuiKit.withAlpha(self ? GuiKit.C_GOLD : 0xFFFFFFFF, open));
+			// 头衔/显示名
 			String disp = r.player.displayName();
 			if (disp != null && !disp.isEmpty()) {
 				String plain = disp.replaceAll("§.", "");
@@ -169,15 +178,16 @@ public class OnlinePlayersScreen extends Screen {
 					if (titleMax > 24) {
 						context.drawTextWithShadow(this.textRenderer,
 								Text.literal(fit(plain, titleMax)), titleX, y + 7,
-								withAlpha(0xFFB9AEE8, open));
+								GuiKit.withAlpha(GuiKit.C_MUTED, open));
 					}
 				}
 			}
 			// 延迟
 			String ping = r.player.latency() >= 0 ? r.player.latency() + "ms" : "?ms";
+			int pingColor = r.player.latency() < 80 ? GuiKit.C_SUCCESS
+					: (r.player.latency() < 160 ? GuiKit.C_WARNING : GuiKit.C_DANGER);
 			context.drawTextWithShadow(this.textRenderer, Text.literal(ping), pingX, y + 7,
-					withAlpha(r.player.latency() < 80 ? 0xFF9CFFC9
-							: (r.player.latency() < 160 ? 0xFFFFD766 : 0xFFFF8F9A), open));
+					GuiKit.withAlpha(pingColor, open));
 
 			// 两个操作按钮
 			drawAction(context, r.x + r.w - BTN_W * 2 - 4, y + 2, "传", mouseX, mouseY, open,
@@ -198,24 +208,22 @@ public class OnlinePlayersScreen extends Screen {
 		int backX = px + (pw - btnW) / 2;
 		boolean backHover = mouseX >= backX && mouseX < backX + btnW && mouseY >= btnY
 				&& mouseY < btnY + btnH;
-		context.fill(backX, btnY, backX + btnW, btnY + btnH,
-				withAlpha(backHover ? 0xE6614FA6 : 0xD02A2542, open));
-		outline(context, backX, btnY, btnW, btnH,
-				withAlpha(backHover ? 0xFFFFFFFF : 0xFF54497F, open));
-		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("← 返回"),
-				backX + btnW / 2, btnY + 7, withAlpha(0xFFFFFFFF, open));
+		GuiKit.pill(context, backX, btnY, btnW, btnH, "← 返回", this.textRenderer, backHover,
+				GuiKit.C_ACCENT, open, false);
 
 		if (this.toast != null) {
 			long left = this.toastUntil - now;
 			if (left <= 0) {
 				this.toast = null;
 			} else {
+				float ta = GuiKit.withAlpha(GuiKit.C_MUTED, open * Math.min(1f, left / 400f));
 				int tw = this.textRenderer.getWidth(this.toast) + 16;
 				int tx = px + (pw - tw) / 2;
 				int ty = btnY - 20;
-				context.fill(tx, ty, tx + tw, ty + 17, withAlpha(0xE0100F1C, open * clamp(left / 400f)));
+				GuiKit.roundedRectA(context, tx, ty, tw, 17, 4, 0xCC1A1A2E, open * Math.min(1f, left / 400f));
+				GuiKit.roundedRectStroke(context, tx, ty, tw, 17, 4, GuiKit.C_BORDER, open * Math.min(1f, left / 400f));
 				context.drawTextWithShadow(this.textRenderer, Text.literal(this.toast), tx + 8, ty + 5,
-						withAlpha(0xFFFF8F9A, open * clamp(left / 400f)));
+						GuiKit.withAlpha(GuiKit.C_WARNING, open * Math.min(1f, left / 400f)));
 			}
 		}
 
@@ -231,13 +239,11 @@ public class OnlinePlayersScreen extends Screen {
 			float open, String playerName, String action) {
 		boolean hov = mouseX >= x && mouseX < x + BTN_W && mouseY >= y && mouseY < y + 18;
 		boolean enabled = ServerDetector.isOnServer();
-		int tint = action.equals("tpa") ? 0xFF3E9E6E : 0xFF5B7FD6;
-		context.fill(x, y, x + BTN_W, y + 18,
-				withAlpha(!enabled ? 0xB0201C33 : (hov ? mix(tint, 0xFFFFFFFF, 0.3f) : tint), open));
-		outline(context, x, y, BTN_W, 18,
-				withAlpha(enabled ? (hov ? 0xFFFFFFFF : 0xFF7E74C0) : 0xFF3E3A5C, open));
+		int tint = action.equals("tpa") ? GuiKit.C_SUCCESS : GuiKit.C_BLUE;
+		GuiKit.roundedRectA(context, x, y, BTN_W, 18, 4, enabled ? tint : 0x301A1A28, open);
+		GuiKit.roundedRectStroke(context, x, y, BTN_W, 18, 4, enabled ? tint : GuiKit.C_DIM, open);
 		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label),
-				x + BTN_W / 2, y + 5, withAlpha(enabled ? 0xFFFFFFFF : 0xFF6E6890, open));
+				x + BTN_W / 2, y + 5, GuiKit.withAlpha(enabled ? 0xFFFFFFFF : GuiKit.C_DIM, open));
 	}
 
 	private void drawHint(DrawContext context, int mouseX, int mouseY, String text, float open) {
@@ -245,10 +251,14 @@ public class OnlinePlayersScreen extends Screen {
 		int h = 18;
 		int tx = Math.min(mouseX + 12, this.width - w - 6);
 		int ty = Math.max(4, Math.min(mouseY - 10, this.height - h - 6));
-		context.fill(tx, ty, tx + w, ty + h, withAlpha(0xF8100F1C, open));
-		outline(context, tx, ty, w, h, withAlpha(0xFF7C6BD9, open));
+		GuiKit.roundedRectA(context, tx, ty, w, h, 4, 0xCC1A1A2E, open);
+		GuiKit.roundedRectStroke(context, tx, ty, w, h, 4, GuiKit.C_BORDER, open);
 		context.drawTextWithShadow(this.textRenderer, Text.literal(text), tx + 7, ty + 5,
-				withAlpha(0xFFE4DEFF, open));
+				GuiKit.withAlpha(0xFFE0E0FF, open));
+	}
+
+	private void ctx_fill(DrawContext ctx, int x, int y, int w, int h, int color) {
+		ctx.fill(x, y, x + w, y + h, color);
 	}
 
 	@Override

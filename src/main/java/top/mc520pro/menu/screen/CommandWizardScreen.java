@@ -13,15 +13,10 @@ import top.mc520pro.menu.PermissionDetector;
 import top.mc520pro.menu.data.CommandCatalog;
 
 /**
- * 二级向导页（v8）：带参数的指令不再让玩家自己复制粘贴，
- * 而是进入本页按字段填写 —— 玩家名可点选在线列表，数字可 +/- 调节，
- * 底部实时预览最终指令，点「完成并发送」或按 Enter 直接执行。
- *
- * 绘制顺序：面板底色放在 renderBackground（先画），输入框等控件随后由 super.render 绘制，
- * 弹层与预览在 render 末尾绘制，保证永远不会被面板盖住。
+ * 二级向导页（现代风格）：带参数指令的填写界面。
+ * 玩家名可点选在线列表，数字用 +/- 调节，底部预览，完成即发送。
  */
 public class CommandWizardScreen extends Screen {
-	/** 单个参数槽位。 */
 	public static final class Field {
 		final String label;
 		final PermissionDetector.ArgType type;
@@ -56,7 +51,7 @@ public class CommandWizardScreen extends Screen {
 	private long lastMs = System.currentTimeMillis();
 	private String toast;
 
-	/** 从指令模板解析参数：`tpa <玩家名>` → 1 个玩家字段。 */
+	/** 从指令模板解析参数。 */
 	public static List<Field> parseFields(String command) {
 		List<Field> out = new ArrayList<>();
 		if (command == null) {
@@ -117,7 +112,6 @@ public class CommandWizardScreen extends Screen {
 						f.max = Math.max(1, Integer.parseInt(parts[0].trim()));
 					}
 				} catch (NumberFormatException ignored) {
-					// 保留默认范围
 				}
 				if (f.max < f.min) {
 					int t = f.min;
@@ -129,14 +123,11 @@ public class CommandWizardScreen extends Screen {
 		}
 	}
 
-	// ---------- 尺寸 ----------
-
 	private int panelW() {
 		return Math.max(250, Math.min(400, this.width - 40));
 	}
 
 	private int panelH() {
-		// 紧凑：标题30 + 标签/输入框区(42n) + 预览20 + 按钮22 + 间隙
 		return Math.min(this.height - 24, 100 + this.fields.size() * ROW_H);
 	}
 
@@ -151,8 +142,6 @@ public class CommandWizardScreen extends Screen {
 	private int btnY() {
 		return panelY() + panelH() - 34;
 	}
-
-	// ---------- 初始化 ----------
 
 	@Override
 	protected void init() {
@@ -178,8 +167,6 @@ public class CommandWizardScreen extends Screen {
 			this.boxes.add(box);
 		}
 	}
-
-	// ---------- 指令组装 ----------
 
 	private String buildCommand() {
 		String[] parts = this.entry.command().split(" ");
@@ -228,7 +215,7 @@ public class CommandWizardScreen extends Screen {
 		client.setScreen(null);
 	}
 
-	// ---------- 绘制：面板底（先画） ----------
+	// ---------- 绘制：面板底 ----------
 
 	@Override
 	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -245,17 +232,19 @@ public class CommandWizardScreen extends Screen {
 		int pw = panelW();
 		int ph = panelH();
 
-		context.fill(px - 2, py - 2, px + pw + 2, py + ph + 2, withAlpha(0xFF3A3466, open));
-		context.fill(px, py, px + pw, py + ph, withAlpha(0xF4110F20, open));
-		context.fillGradient(px, py, px + pw, py + 30, withAlpha(0xFF6C46C8, open),
-				withAlpha(0xFF2E6D9C, open));
-		context.fill(px, py + 30, px + pw, py + 31, withAlpha(0xFFB6A4FF, open));
+		GuiKit.glassPanel(context, px, py, pw, ph, open);
+
+		float phase = (this.openT * 3.0f) % 1f;
+		int h1 = GuiKit.mix(GuiKit.C_ACCENT, GuiKit.C_ACCENT2, phase);
+		int h2 = GuiKit.mix(GuiKit.C_ACCENT2, GuiKit.C_ACCENT, phase);
+		context.fillGradient(px + 2, py + 2, px + pw - 2, py + 26, GuiKit.withAlpha(h1, open), GuiKit.withAlpha(h2, open));
+		context.fillGradient(px + 2, py + 24, px + pw - 2, py + 32, GuiKit.withAlpha(h2, open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, open * 0.8f));
 
 		context.drawTextWithShadow(this.textRenderer,
-				Text.literal(this.entry.name()).styled(s -> s.withBold(true)), px + 12, py + 7,
-				withAlpha(0xFFFFFFFF, open));
+				Text.literal(this.entry.name()).styled(s -> s.withBold(true)), px + 16, py + 7,
+				GuiKit.withAlpha(0xFFFFFFFF, open));
 		context.drawTextWithShadow(this.textRenderer, Text.literal(fit(this.entry.usage(), pw - 24)),
-				px + 12, py + 19, withAlpha(0xFFDCD2FF, open));
+				px + 16, py + 19, GuiKit.withAlpha(0xFFE0E0FF, open));
 
 		// 参数标签
 		for (int i = 0; i < this.fields.size(); i++) {
@@ -268,15 +257,15 @@ public class CommandWizardScreen extends Screen {
 				case WORD -> "填写名称";
 			};
 			context.drawTextWithShadow(this.textRenderer,
-					Text.literal(f.label + "  ·  " + hint), px + 20, rowY, withAlpha(0xFFB9AEDC, open));
+					Text.literal(f.label + "  ·  " + hint), px + 20, rowY, GuiKit.withAlpha(GuiKit.C_MUTED, open));
 		}
 	}
 
-	// ---------- 绘制：控件之上（后画） ----------
+	// ---------- 绘制：控件之上 ----------
 
 	@Override
 	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-		super.render(context, mouseX, mouseY, delta); // 背景 + 输入框
+		super.render(context, mouseX, mouseY, delta);
 
 		float open = this.openAlpha;
 		int px = panelX();
@@ -284,41 +273,38 @@ public class CommandWizardScreen extends Screen {
 		int pw = panelW();
 		int ph = panelH();
 
-		// 数字 / 玩家 附加按钮（画在输入框之后，保证可见）
+		// 数字 / 玩家 附加按钮
 		for (int i = 0; i < this.fields.size(); i++) {
 			Field f = this.fields.get(i);
 			int rowY = py + 52 + i * ROW_H;
 			int boxY = rowY + 13;
 			if (f.type == PermissionDetector.ArgType.NUMBER) {
-				// 数值画在输入框内部右端（输入框右端由 init 预留了 52px 空间）
 				int textRight = px + pw - 56;
 				String num = String.valueOf(f.number);
 				int numW = this.textRenderer.getWidth(num);
 				context.drawTextWithShadow(this.textRenderer, Text.literal(num),
-						textRight - numW, boxY + 5, withAlpha(0xFF9CF5C4, open));
-				// −/+ 按钮放在面板右端，两者之间留 4px 间隙
+						textRight - numW, boxY + 5, GuiKit.withAlpha(GuiKit.C_SUCCESS, open));
 				int bx = px + pw - 46;
 				drawSmall(context, bx, boxY, 20, 18, "−", open, mouseX, mouseY, f.number > f.min);
 				drawSmall(context, bx + 24, boxY, 20, 18, "+", open, mouseX, mouseY, f.number < f.max);
 			} else if (f.type == PermissionDetector.ArgType.PLAYER) {
 				int bx = px + pw - 44;
 				boolean hov = mouseX >= bx && mouseX < bx + 22 && mouseY >= boxY && mouseY < boxY + 18;
-				context.fill(bx, boxY, bx + 22, boxY + 18,
-						withAlpha(hov ? 0xE6614FA6 : 0xD02A2542, open));
-				outline(context, bx, boxY, 22, 18,
-						withAlpha(hov ? 0xFFFFFFFF : 0xFF54497F, open));
-				drawTriangleDown(context, bx + 11, boxY + 9, 5, withAlpha(0xFFFFFFFF, open));
+				GuiKit.roundedRect(context, bx, boxY, 22, 18, 4,
+						GuiKit.withAlpha(hov ? GuiKit.C_ACCENT : 0xCC1A1A2E, open));
+				GuiKit.roundedRectStroke(context, bx, boxY, 22, 18, 4, GuiKit.C_ACCENT, open);
+				drawTriangleDown(context, bx + 11, boxY + 9, 5, GuiKit.withAlpha(0xFFFFFFFF, open));
 			}
 		}
 
 		// 预览
 		String preview = "/" + buildCommand();
 		int previewY = py + ph - 62;
-		context.fill(px + 14, previewY, px + pw - 14, previewY + 20, withAlpha(0xC018152B, open));
-		outline(context, px + 14, previewY, pw - 28, 20, withAlpha(0x50372F62, open));
+		GuiKit.roundedRect(context, px + 14, previewY, pw - 28, 20, 4, GuiKit.withAlpha(0xCC1A1A2E, open));
+		GuiKit.roundedRectStroke(context, px + 14, previewY, pw - 28, 20, 4, GuiKit.C_BORDER, open);
 		context.drawTextWithShadow(this.textRenderer, Text.literal(fit("→ " + preview, pw - 36)),
 				px + 20, previewY + 6,
-				withAlpha(allFilled() ? 0xFF97F5B4 : 0xFF8C86A8, open));
+				GuiKit.withAlpha(allFilled() ? GuiKit.C_SUCCESS : GuiKit.C_MUTED, open));
 
 		// 完成按钮
 		int btnH = 22;
@@ -327,39 +313,30 @@ public class CommandWizardScreen extends Screen {
 		int okX = px + pw - okW - 14;
 		boolean canDo = allFilled();
 		boolean okHover = mouseX >= okX && mouseX < okX + okW && mouseY >= by && mouseY < by + btnH;
-		context.fill(okX, by, okX + okW, by + btnH,
-				withAlpha(!canDo ? 0xB0243A30 : (okHover ? 0xE646B07C : 0xD02A7A54), open));
-		outline(context, okX, by, okW, btnH,
-				withAlpha(canDo ? (okHover ? 0xFFFFFFFF : 0xFF5FB98D) : 0xFF3A4A44, open));
-		context.drawCenteredTextWithShadow(this.textRenderer,
-				Text.literal(canDo ? "完成并发送" : "请填写参数"), okX + okW / 2, by + 7,
-				withAlpha(canDo ? 0xFFFFFFFF : 0xFF7F8F88, open));
+		GuiKit.pill(context, okX, by, okW, btnH, canDo ? "完成并发送" : "请填写参数",
+				this.textRenderer, okHover, canDo ? GuiKit.C_SUCCESS : GuiKit.C_DIM, open, !canDo);
 
 		// 返回按钮
 		int backW = 66;
 		int backX = px + 14;
 		boolean backHover = mouseX >= backX && mouseX < backX + backW && mouseY >= by
 				&& mouseY < by + btnH;
-		context.fill(backX, by, backX + backW, by + btnH,
-				withAlpha(backHover ? 0xE6614FA6 : 0xD02A2542, open));
-		outline(context, backX, by, backW, btnH,
-				withAlpha(backHover ? 0xFFFFFFFF : 0xFF54497F, open));
-		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("← 返回"),
-				backX + backW / 2, by + 7, withAlpha(0xFFFFFFFF, open));
+		GuiKit.pill(context, backX, by, backW, btnH, "← 返回", this.textRenderer, backHover,
+				GuiKit.C_ACCENT, open, false);
 
-		// 快捷键提示：只在「返回」与「完成」之间的空隙够宽时才画，避免压住按钮
+		// 快捷键提示
 		String hint = "Enter 完成 · Esc 返回";
 		int hintW = this.textRenderer.getWidth(hint);
 		int hintLeft = backX + backW + 8;
 		int hintRightLimit = okX - 8;
 		if (hintRightLimit - hintLeft >= hintW) {
 			context.drawTextWithShadow(this.textRenderer, Text.literal(hint),
-					hintLeft, by + 8, withAlpha(0xFF6E6890, open));
+					hintLeft, by + 8, GuiKit.withAlpha(GuiKit.C_DIM, open));
 		}
 
 		if (this.toast != null) {
 			context.drawTextWithShadow(this.textRenderer, Text.literal(this.toast),
-					px + 20, previewY - 12, withAlpha(0xFFFF8F9A, open));
+					px + 20, previewY - 12, GuiKit.withAlpha(GuiKit.C_WARNING, open));
 		}
 
 		if (this.pickerFor >= 0 && this.pickerFor < this.fields.size()) {
@@ -370,15 +347,14 @@ public class CommandWizardScreen extends Screen {
 	private void drawSmall(DrawContext context, int x, int y, int w, int h, String label, float open,
 			int mouseX, int mouseY, boolean enabled) {
 		boolean hov = enabled && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-		context.fill(x, y, x + w, y + h,
-				withAlpha(!enabled ? 0xB0201C33 : (hov ? 0xE6614FA6 : 0xD02A2542), open));
-		outline(context, x, y, w, h,
-				withAlpha(enabled ? (hov ? 0xFFFFFFFF : 0xFF54497F) : 0xFF332F4A, open));
+		GuiKit.roundedRect(context, x, y, w, h, 4,
+				GuiKit.withAlpha(!enabled ? 0x301A1A28 : (hov ? GuiKit.C_ACCENT : 0xCC1A1A2E), open));
+		GuiKit.roundedRectStroke(context, x, y, w, h, 4,
+				GuiKit.withAlpha(enabled ? GuiKit.C_ACCENT : GuiKit.C_DIM, open), 1f);
 		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label), x + w / 2, y + 5,
-				withAlpha(enabled ? 0xFFFFFFFF : 0xFF6E6890, open));
+				GuiKit.withAlpha(enabled ? 0xFFFFFFFF : GuiKit.C_DIM, open));
 	}
 
-	/** 下拉列表可见行数：受面板剩余高度限制，最多 8 行。 */
 	private int pickerVisibleRows() {
 		List<String> players = new ArrayList<>(PermissionDetector.onlinePlayers());
 		if (this.pickerFor < 0) {
@@ -410,16 +386,14 @@ public class CommandWizardScreen extends Screen {
 
 		int belowY = rowY + 34;
 		int aboveY = rowY - listH - 2;
-		int topLimit = py + 50; // 不压住参数标签行
-		int bottomLimit = py + ph - 70; // 不压住预览/按钮
-
+		int topLimit = py + 50;
+		int bottomLimit = py + ph - 70;
 		int listY;
 		if (belowY + listH <= bottomLimit) {
 			listY = belowY;
 		} else if (aboveY >= topLimit) {
 			listY = aboveY;
 		} else {
-			// 上下都放不下：夹在面板内
 			listY = Math.max(topLimit, Math.min(belowY, bottomLimit - listH));
 		}
 		return new int[] { listX, listY, listW, listH };
@@ -433,13 +407,13 @@ public class CommandWizardScreen extends Screen {
 		int listW = r[2];
 		int listH = r[3];
 
-		context.fill(listX, listY, listX + listW, listY + listH, withAlpha(0xFC100F1C, open));
-		outline(context, listX, listY, listW, listH, withAlpha(0xFF8F7FD9, open));
+		GuiKit.roundedRect(context, listX, listY, listW, listH, 4, GuiKit.withAlpha(0xCC1A1A2E, open));
+		GuiKit.roundedRectStroke(context, listX, listY, listW, listH, 4, GuiKit.C_BORDER, open);
 
 		if (players.isEmpty()) {
 			context.drawTextWithShadow(this.textRenderer,
 					Text.literal("暂无其他在线玩家，可直接手动输入"), listX + 6, listY + 5,
-					withAlpha(0xFF9C93C4, open));
+					GuiKit.withAlpha(GuiKit.C_MUTED, open));
 			return;
 		}
 
@@ -451,11 +425,11 @@ public class CommandWizardScreen extends Screen {
 			boolean hov = mouseX >= listX + 2 && mouseX < listX + listW - 2 && mouseY >= y
 					&& mouseY < y + 12;
 			if (hov) {
-				context.fill(listX + 2, y - 1, listX + listW - 2, y + 11,
-						withAlpha(0x50FFFFFF, open));
+				GuiKit.roundedRect(context, listX + 2, y - 1, listW - 4, 12, 2,
+						GuiKit.withAlpha(0x50FFFFFF, open));
 			}
 			context.drawTextWithShadow(this.textRenderer, Text.literal(players.get(i)), listX + 6, y,
-					withAlpha(0xFFE4DEFF, open));
+					GuiKit.withAlpha(0xFFE0E0FF, open));
 			y += 12;
 		}
 		if (players.size() > visible) {
@@ -463,11 +437,9 @@ public class CommandWizardScreen extends Screen {
 					Text.literal("滚轮翻页 " + (this.pickerScroll + 1) + "-"
 							+ Math.min(players.size(), this.pickerScroll + visible)
 							+ " / " + players.size()),
-					listX + listW - 96, listY + listH + 2, withAlpha(0xFF8C86A8, open));
+					listX + listW - 96, listY + listH + 2, GuiKit.withAlpha(GuiKit.C_DIM, open));
 		}
 	}
-
-	// ---------- 交互 ----------
 
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -477,9 +449,8 @@ public class CommandWizardScreen extends Screen {
 		int px = panelX();
 		int py = panelY();
 		int pw = panelW();
-		int ph = panelH();
 
-		// 玩家弹层
+		// 玩家下拉列表点击
 		if (this.pickerFor >= 0 && this.pickerFor < this.fields.size()) {
 			List<String> players = new ArrayList<>(PermissionDetector.onlinePlayers());
 			int[] r = pickerRect();
@@ -561,7 +532,7 @@ public class CommandWizardScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		if (keyCode == 257 || keyCode == 335) { // Enter / NumpadEnter
+		if (keyCode == 257 || keyCode == 335) {
 			if (allFilled()) {
 				finish();
 				return true;
@@ -596,28 +567,11 @@ public class CommandWizardScreen extends Screen {
 		return out + "…";
 	}
 
-	/** 向下的实心三角（像素绘制，避免字体缺字）。 */
 	private void drawTriangleDown(DrawContext context, int cx, int cy, int size, int color) {
 		for (int i = 0; i < size; i++) {
 			int half = i;
 			context.fill(cx - half, cy - size / 2 + i, cx + half + 1, cy - size / 2 + i + 1, color);
 		}
-	}
-
-	private void outline(DrawContext context, int x, int y, int w, int h, int color) {
-		context.fill(x, y, x + w, y + 1, color);
-		context.fill(x, y + h - 1, x + w, y + h, color);
-		context.fill(x, y, x + 1, y + h, color);
-		context.fill(x + w - 1, y, x + w, y + h, color);
-	}
-
-	private static int withAlpha(int color, float alpha) {
-		int baseA = (color >>> 24) & 0xFF;
-		if (baseA == 0) {
-			baseA = 0xFF;
-		}
-		int a = Math.round(baseA * Math.min(1f, Math.max(0f, alpha)));
-		return (Math.min(255, Math.max(0, a)) << 24) | (color & 0xFFFFFF);
 	}
 
 	private static float easeOut(float t) {
