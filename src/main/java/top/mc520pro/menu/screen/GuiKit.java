@@ -36,7 +36,7 @@ public final class GuiKit {
 	/** 卡片：纹理绘制。 */
 	public static void card(DrawContext ctx, int x, int y, int w, int h, int accent,
 			float alpha, boolean hover, boolean selected, boolean locked) {
-		int tex;
+		String tex;
 		if (locked) {
 			tex = TextureKit.CARD_DISABLED;
 		} else if (selected || hover) {
@@ -54,7 +54,7 @@ public final class GuiKit {
 	/** 按钮：纹理绘制。 */
 	public static void button(DrawContext ctx, int x, int y, int w, int h, String label,
 			TextRenderer tr, boolean hover, int color, float alpha, boolean disabled) {
-		int tex;
+		String tex;
 		if (disabled) {
 			tex = TextureKit.BTN_DISABLED;
 		} else if (color == C_SUCCESS) {
@@ -82,7 +82,7 @@ public final class GuiKit {
 	/** 徽章：纹理绘制。 */
 	public static void badge(DrawContext ctx, int x, int y, int w, int h, String label,
 			TextRenderer tr, int color, float alpha) {
-		int tex;
+		String tex;
 		if (color == C_SUCCESS) {
 			tex = TextureKit.BADGE_GREEN;
 		} else if (color == C_DANGER) {

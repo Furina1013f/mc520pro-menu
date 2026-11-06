@@ -42,6 +42,10 @@ public class CommandsScreen extends Screen {
 	private int chipH = 18;
 	private int perPage = 30;
 	private long lastFrameMs = createdAt;
+	private float open;
+	private float timeSec;
+	private net.minecraft.client.gui.widget.TextFieldWidget searchField;
+	private String searchText = "";
 
 	private static final class Pill {
 		final int x;
@@ -87,12 +91,27 @@ public class CommandsScreen extends Screen {
 		Collections.sort(this.commands);
 	}
 
+	private List<String> filteredCommands() {
+		if (this.searchText.isEmpty()) {
+			return this.commands;
+		}
+		List<String> out = new ArrayList<>();
+		for (String cmd : this.commands) {
+			if (cmd.toLowerCase(java.util.Locale.ROOT).contains(this.searchText)) {
+				out.add(cmd);
+			}
+		}
+		return out;
+	}
+
 	private int pageCount() {
-		return Math.max(1, (this.commands.size() + this.perPage - 1) / this.perPage);
+		int size = filteredCommands().size();
+		return Math.max(1, (size + this.perPage - 1) / this.perPage);
 	}
 
 	@Override
 	protected void init() {
+		this.clearChildren();
 		int W = this.width;
 		int H = this.height;
 		this.panelW = Math.max(300, Math.min(540, W - OUTER_PAD * 2));
@@ -103,20 +122,33 @@ public class CommandsScreen extends Screen {
 
 		int headerH = 34;
 		int infoH = 16;
+		int searchH = 22;
 		int footerH = 30;
-		int availH = H - OUTER_PAD * 2 - headerH - infoH - footerH - 10;
+		int availH = H - OUTER_PAD * 2 - headerH - infoH - searchH - footerH - 12;
 		this.rows = Math.max(3, availH / (this.chipH + GAP_Y));
 		this.perPage = this.cols * this.rows;
 
-		this.panelH = headerH + infoH + this.rows * (this.chipH + GAP_Y) + footerH + 6;
+		this.panelH = headerH + infoH + searchH + this.rows * (this.chipH + GAP_Y) + footerH + 6;
 		this.panelX = (W - this.panelW) / 2;
 		this.panelY = Math.max(4, (H - this.panelH) / 2);
 		this.gridLeft = this.panelX + 14;
-		this.gridTop = this.panelY + headerH + infoH;
+		this.gridTop = this.panelY + headerH + infoH + searchH;
 
 		if (this.page > pageCount() - 1) {
 			this.page = Math.max(0, pageCount() - 1);
 		}
+
+		// 搜索框（纹理背景 + 输入框）
+		this.searchField = new net.minecraft.client.gui.widget.TextFieldWidget(this.textRenderer,
+				this.panelX + 34, this.panelY + headerH + infoH + 2, this.panelW - 48, 18,
+				Text.literal("搜索指令"));
+		this.searchField.setMaxLength(40);
+		this.searchField.setText(this.searchText);
+		this.searchField.setChangedListener(text -> {
+			this.searchText = text.toLowerCase(java.util.Locale.ROOT).trim();
+			this.page = 0;
+		});
+		this.addDrawableChild(this.searchField);
 
 		this.pills.clear();
 		int pillH = 22;
@@ -145,30 +177,34 @@ public class CommandsScreen extends Screen {
 	}
 
 	private List<String> pageCommands() {
+		List<String> filtered = filteredCommands();
 		int from = this.page * this.perPage;
-		int to = Math.min(this.commands.size(), from + this.perPage);
+		int to = Math.min(filtered.size(), from + this.perPage);
 		if (from >= to) {
 			return Collections.emptyList();
 		}
-		return this.commands.subList(from, to);
+		return filtered.subList(from, to);
 	}
 
 	private String joined(int from, int to) {
-		List<String> part = this.commands.subList(from, Math.min(this.commands.size(), to));
+		List<String> filtered = filteredCommands();
+		List<String> part = filtered.subList(from, Math.min(filtered.size(), to));
 		return "/" + String.join("\n/", part);
 	}
 
 	private void copyPage() {
+		List<String> filtered = filteredCommands();
 		int from = this.page * this.perPage;
-		int to = Math.min(this.commands.size(), from + this.perPage);
+		int to = Math.min(filtered.size(), from + this.perPage);
 		if (from < to) {
 			MinecraftClient.getInstance().keyboard.setClipboard(joined(from, to));
 		}
 	}
 
 	private void copyAll() {
-		if (!this.commands.isEmpty()) {
-			MinecraftClient.getInstance().keyboard.setClipboard(joined(0, this.commands.size()));
+		List<String> filtered = filteredCommands();
+		if (!filtered.isEmpty()) {
+			MinecraftClient.getInstance().keyboard.setClipboard(joined(0, filtered.size()));
 		}
 	}
 
@@ -178,38 +214,49 @@ public class CommandsScreen extends Screen {
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-		super.render(context, mouseX, mouseY, delta);
-
+	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
 		long now = System.currentTimeMillis();
 		float dt = Math.min(0.1f, (now - this.lastFrameMs) / 1000f);
 		this.lastFrameMs = now;
-		float open = easeOut((now - this.createdAt) / 200f);
-		float timeSec = now / 1000f;
+		this.open = easeOut((now - this.createdAt) / 200f);
+		this.timeSec = now / 1000f;
 
 		// 现代玻璃面板
-		GuiKit.glassPanel(context, this.panelX, this.panelY, this.panelW, this.panelH, open);
+		GuiKit.glassPanel(context, this.panelX, this.panelY, this.panelW, this.panelH, this.open);
 
 		// 头部渐变
-		float phase = (timeSec * 0.12f) % 1f;
+		float phase = (this.timeSec * 0.12f) % 1f;
 		int h1 = GuiKit.mix(GuiKit.C_ACCENT, GuiKit.C_ACCENT2, phase);
 		int h2 = GuiKit.mix(GuiKit.C_ACCENT2, GuiKit.C_ACCENT, phase);
 		context.fillGradient(this.panelX + 2, this.panelY + 2, this.panelX + this.panelW - 2, this.panelY + 32,
-				GuiKit.withAlpha(h1, open), GuiKit.withAlpha(h2, open));
+				GuiKit.withAlpha(h1, this.open), GuiKit.withAlpha(h2, this.open));
 		context.fillGradient(this.panelX + 2, this.panelY + 30, this.panelX + this.panelW - 2, this.panelY + 36,
-				GuiKit.withAlpha(h2, open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, open * 0.8f));
+				GuiKit.withAlpha(h2, this.open * 0.5f), GuiKit.withAlpha(0xFF1A1A2E, this.open * 0.8f));
 
 		context.drawTextWithShadow(this.textRenderer, Text.literal("服务器指令清单"),
-				this.panelX + 14, this.panelY + 6, GuiKit.withAlpha(0xFFFFFFFF, open));
+				this.panelX + 14, this.panelY + 6, GuiKit.withAlpha(0xFFFFFFFF, this.open));
 		context.drawTextWithShadow(this.textRenderer, Text.literal(ServerDetector.shortInfo()),
-				this.panelX + 14, this.panelY + 19, GuiKit.withAlpha(0xFFE0E0FF, open));
+				this.panelX + 14, this.panelY + 19, GuiKit.withAlpha(0xFFE0E0FF, this.open));
 
+		int shown = filteredCommands().size();
 		String info = this.onServer
-				? "共 " + this.commands.size() + " 条指令 · 第 " + (this.page + 1) + "/" + pageCount()
-					+ " 页 · 点击指令复制到剪贴板"
+				? (this.searchText.isEmpty()
+					? "共 " + this.commands.size() + " 条指令 · 第 " + (this.page + 1) + "/" + pageCount()
+						+ " 页 · 点击指令复制到剪贴板"
+					: "匹配 " + shown + "/" + this.commands.size() + " 条 · 第 " + (this.page + 1) + "/"
+						+ pageCount() + " 页")
 				: "未连接 " + ServerDetector.SERVER_HOST + "，无法读取指令";
 		context.drawTextWithShadow(this.textRenderer, Text.literal(fit(info, this.panelW - 28)),
-				this.panelX + 14, this.panelY + 38, GuiKit.withAlpha(GuiKit.C_MUTED, open));
+				this.panelX + 14, this.panelY + 38, GuiKit.withAlpha(GuiKit.C_MUTED, this.open));
+
+		// 搜索框背景（纹理，画在输入框之下）
+		TextureKit.draw(context, TextureKit.SEARCH_BOX, this.panelX + 14, this.panelY + 52, this.panelW - 28, 18);
+	}
+
+	@Override
+	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+		super.render(context, mouseX, mouseY, delta); // 输入框画在面板之上
+		float open = this.open;
 
 		List<String> pageList = pageCommands();
 		if (pageList.isEmpty()) {
@@ -244,11 +291,11 @@ public class CommandsScreen extends Screen {
 		}
 
 		for (Pill pill : this.pills) {
-			boolean disabled = this.commands.isEmpty() && !pill.label.equals("返回");
+			boolean disabled = filteredCommands().isEmpty() && !pill.label.equals("返回");
 			boolean hovered = !disabled && mouseX >= pill.x && mouseX < pill.x + pill.w
 					&& mouseY >= pill.y && mouseY < pill.y + pill.h;
 			float target = hovered ? 1f : 0f;
-			pill.hover += (target - pill.hover) * Math.min(1f, dt * 14f);
+			pill.hover += (target - pill.hover) * Math.min(1f, delta * 14f);
 			int pillColor = GuiKit.C_ACCENT;
 			if (pill.label.equals("返回")) {
 				pillColor = GuiKit.C_PURPLE;

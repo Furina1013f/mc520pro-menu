@@ -1,73 +1,59 @@
 package top.mc520pro.menu.screen;
 
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
 
 /**
- * 纹理渲染工具：用纹理图集画 UI，取代 fill 画的方块。
- * 纹理图集 512x512，16x16 格子，每格 32x32。
+ * 纹理渲染工具：每个 UI 元素一个独立 sprite（nine-slice 拉伸）。
+ * sprite 位于 textures/gui/sprites/mc520pro/，带 mcmeta 定义九宫格边框。
+ * drawGuiTexture 自动处理 sprite atlas 与 nine_slice 缩放。
  */
 public final class TextureKit {
-	public static final Identifier ATLAS = Identifier.of("mc520pro", "textures/ui_atlas.png");
-	private static final int COLS = 16;
+	private static final String PREFIX = "mc520pro";
 
 	private TextureKit() {
 	}
 
-	/** UV 坐标。 */
-	private static float uv(int col) {
-		return col / (float) COLS;
+	private static Identifier id(String name) {
+		return Identifier.of(PREFIX, "textures/gui/sprites/mc520pro/" + name);
 	}
 
-	/** 画纹理（接受格子索引 0-255，自动计算列/行）。 */
-	public static void draw(DrawContext ctx, int cellIndex, int x, int y, int w, int h) {
-		int texCol = cellIndex % COLS;
-		int texRow = cellIndex / COLS;
-		ctx.drawTexturedQuad(ATLAS, x, y, w, h,
-				uv(texCol), uv(texRow), uv(texCol + 1), uv(texRow + 1));
+	/** 画一个 UI sprite（nine-slice 自动拉伸）。 */
+	public static void draw(DrawContext ctx, String name, int x, int y, int w, int h) {
+		ctx.drawGuiTexture(RenderPipelines.GUI_TEXTURED, id(name), x, y, w, h);
 	}
 
-	// ---- 预定义格子坐标 ----
-	// Row 0: 面板与卡片
-	public static final int PANEL_GLASS = 0;
-	public static final int PANEL_SOLID = 1;
-	public static final int CARD_NORMAL = 2;
-	public static final int CARD_HOVER = 3;
-	public static final int CARD_SELECTED = 4;
-	public static final int CARD_DISABLED = 5;
-	// Row 1: 按钮
-	public static final int BTN_NORMAL = 16;
-	public static final int BTN_ACCENT = 17;
-	public static final int BTN_DISABLED = 18;
-	public static final int BTN_SUCCESS = 19;
-	public static final int BTN_DANGER = 20;
-	public static final int BTN_BLUE = 21;
-	// Row 2: 徽章
-	public static final int BADGE_GREEN = 32;
-	public static final int BADGE_RED = 33;
-	public static final int BADGE_ORANGE = 34;
-	public static final int BADGE_BLUE = 35;
-	public static final int BADGE_GOLD = 36;
-	public static final int BADGE_PURPLE = 37;
-	// Row 3: 图标徽章、滚动条、浮窗、预览、分隔线
-	public static final int ICON_BADGE = 48;
-	public static final int SCROLLBAR_TRACK = 49;
-	public static final int SCROLLBAR_THUMB = 50;
-	public static final int TOOLTIP_BG = 51;
-	public static final int PREVIEW_BG = 52;
-	public static final int DIVIDER = 53;
-	// Row 4: 进度条、头像、开关、搜索框
-	public static final int PROGRESS_BAR = 64;
-	public static final int AVATAR_DEFAULT = 65;
-	public static final int AVATAR_PLAYER = 66;
-	public static final int TOGGLE_ON = 67;
-	public static final int TOGGLE_OFF = 68;
-	public static final int SEARCH_BOX = 69;
-	// Row 5: 标签、星星、加载动画、圆点
-	public static final int TAB_NORMAL = 80;
-	public static final int TAB_ACTIVE = 81;
-	public static final int STAR_FULL = 82;
-	public static final int STAR_EMPTY = 83;
-	public static final int LOADING_SPINNER = 84;
-	public static final int BADGE_DOT = 85;
+	// ---- sprite 名称常量 ----
+	public static final String PANEL_GLASS = "panel_glass";
+	public static final String PANEL_SOLID = "panel_solid";
+	public static final String CARD_NORMAL = "card_normal";
+	public static final String CARD_HOVER = "card_hover";
+	public static final String CARD_SELECTED = "card_selected";
+	public static final String CARD_DISABLED = "card_disabled";
+	public static final String BTN_ACCENT = "btn_accent";
+	public static final String BTN_SUCCESS = "btn_success";
+	public static final String BTN_DANGER = "btn_danger";
+	public static final String BTN_BLUE = "btn_blue";
+	public static final String BTN_DISABLED = "btn_disabled";
+	public static final String BADGE_GREEN = "badge_green";
+	public static final String BADGE_RED = "badge_red";
+	public static final String BADGE_ORANGE = "badge_orange";
+	public static final String BADGE_BLUE = "badge_blue";
+	public static final String BADGE_GOLD = "badge_gold";
+	public static final String BADGE_PURPLE = "badge_purple";
+	public static final String ICON_BADGE = "icon_badge";
+	public static final String SCROLLBAR_TRACK = "scrollbar_track";
+	public static final String SCROLLBAR_THUMB = "scrollbar_thumb";
+	public static final String TOOLTIP_BG = "tooltip_bg";
+	public static final String PREVIEW_BG = "preview_bg";
+	public static final String PROGRESS_BAR = "progress_bar";
+	public static final String AVATAR_DEFAULT = "avatar_default";
+	public static final String AVATAR_PLAYER = "avatar_player";
+	public static final String SEARCH_BOX = "search_box";
+	public static final String STAR_FULL = "star_full";
+	public static final String STAR_EMPTY = "star_empty";
+	public static final String LOADING_SPINNER = "loading_spinner";
+	public static final String BADGE_DOT = "badge_dot";
+	public static final String DIVIDER = "divider";
 }
