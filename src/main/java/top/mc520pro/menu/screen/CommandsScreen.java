@@ -138,9 +138,10 @@ public class CommandsScreen extends Screen {
 			this.page = Math.max(0, pageCount() - 1);
 		}
 
-		// 搜索框（纹理背景 + 输入框）
+		// 搜索框（纹理背景 + 输入框；纹理自带放大镜在左侧 14px）
+		int searchY = this.panelY + headerH + infoH;
 		this.searchField = new net.minecraft.client.gui.widget.TextFieldWidget(this.textRenderer,
-				this.panelX + 34, this.panelY + headerH + infoH + 2, this.panelW - 48, 18,
+				this.panelX + 34, searchY + 2, this.panelW - 52, 18,
 				Text.literal("搜索指令"));
 		this.searchField.setMaxLength(40);
 		this.searchField.setText(this.searchText);
@@ -249,8 +250,8 @@ public class CommandsScreen extends Screen {
 		context.drawTextWithShadow(this.textRenderer, Text.literal(fit(info, this.panelW - 28)),
 				this.panelX + 14, this.panelY + 38, GuiKit.withAlpha(GuiKit.C_MUTED, this.open));
 
-		// 搜索框背景（纹理，画在输入框之下）
-		TextureKit.draw(context, TextureKit.SEARCH_BOX, this.panelX + 14, this.panelY + 52, this.panelW - 28, 18);
+		// 搜索框背景（纹理，画在输入框之下，与输入框同 Y 对齐）
+		TextureKit.draw(context, TextureKit.SEARCH_BOX, this.panelX + 14, this.panelY + 52, this.panelW - 28, 20);
 	}
 
 	@Override
